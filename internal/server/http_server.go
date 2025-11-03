@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -51,15 +52,26 @@ func (server *Server) Start(ctx context.Context) error {
 
 	go func() {
 		<-ctx.Done()
+
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
 		defer cancel()
+
+		logger.Log.Info("HTTP server shutting down...")
+
 		if err := server.httpServer.Shutdown(shutdownCtx); err != nil {
-			logger.Log.Error("server shutdown failed", zap.Error(err))
+			logger.Log.Error("HTTP server shutdown failed", zap.Error(err))
 		}
 	}()
 
-	logger.Log.Info("Server started on", zap.String("server", server.httpServer.Addr))
+	logger.Log.Info("HTTP server started on", zap.String("address", server.httpServer.Addr))
 
-	return server.httpServer.ListenAndServe()
+	err := server.httpServer.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("HTTP server error: %w", err)
+	}
+
+	logger.Log.Info("HTTP server stopped gracefully")
+	return nil
 
 }

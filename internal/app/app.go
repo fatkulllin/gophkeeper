@@ -3,13 +3,13 @@ package app
 import (
 	"context"
 	"net/http"
-	"sync"
 
 	"github.com/fatkulllin/gophkeeper/internal/config"
 	"github.com/fatkulllin/gophkeeper/internal/handlers"
 	"github.com/fatkulllin/gophkeeper/internal/logger"
 	"github.com/fatkulllin/gophkeeper/internal/server"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -28,34 +28,31 @@ func NewApp(cfg config.Config) (App, error) {
 }
 
 func (app *App) Run(ctx context.Context) error {
-	ctx, cancel := context.WithCancel(ctx)
+	group, ctx := errgroup.WithContext(ctx)
 
-	defer cancel()
-
-	var wg sync.WaitGroup
-
-	errCh := make(chan error, 2)
-
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
+	group.Go(func() error {
 		if err := app.server.Start(ctx); err != nil && err != http.ErrServerClosed {
 			logger.Log.Error("server exited with error", zap.Error(err))
-			errCh <- err
-			cancel()
+			return err
 		}
-	}()
+		return nil
+	})
 
-	select {
-	case <-ctx.Done():
-		logger.Log.Info("shutting down...")
-	case err := <-errCh:
-		logger.Log.Warn("shutting down due to error")
+	group.Go(func() error {
+		if err := app.server.StartGRPC(ctx); err != nil {
+			logger.Log.Error("server exited with error", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+
+	if err := group.Wait(); err != nil {
+		logger.Log.Warn("shutting down due to error", zap.Error(err))
 		return err
 	}
 
-	wg.Wait()
+	logger.Log.Info("shutting down...")
+
 	logger.Log.Info("shutdown complete")
 	return nil
 }
