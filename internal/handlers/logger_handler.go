@@ -14,8 +14,8 @@ type LoggerHandler struct {
 	validdate *validator.Validate
 }
 
-func NewLoggerHandler() LoggerHandler {
-	return LoggerHandler{validdate: validator.New()}
+func NewLoggerHandler() *LoggerHandler {
+	return &LoggerHandler{validdate: validator.New()}
 }
 
 func (h *LoggerHandler) SetLevel(res http.ResponseWriter, req *http.Request) {

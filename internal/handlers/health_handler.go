@@ -9,8 +9,8 @@ import (
 
 type HealthHandler struct{}
 
-func NewHealthHandler() HealthHandler {
-	return HealthHandler{}
+func NewHealthHandler() *HealthHandler {
+	return &HealthHandler{}
 }
 
 func (h *HealthHandler) HealthHTTP(res http.ResponseWriter, req *http.Request) {

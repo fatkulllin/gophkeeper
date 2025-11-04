@@ -25,6 +25,7 @@ func (server *Server) StartGRPC(ctx context.Context) error {
 	healthServer.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
 
 	logger.Log.Info("gRPC server is running on", zap.String("address", server.config.GRPCAddress))
+
 	go func() {
 		<-ctx.Done()
 		logger.Log.Info("Shutting down gRPC server gracefully")

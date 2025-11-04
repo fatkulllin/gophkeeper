@@ -13,6 +13,9 @@ type Config struct {
 	GRPCAddress string `env:"GRPC_ADDRESS" envDefault:"localhost:9090"`
 	DevelopLog  bool   `env:"DEVELOP_LOG" envDefault:"false"`
 	LogLevel    string `env:"LOG_LEVEL" envDefault:"INFO"`
+	DatabaseURI string `env:"DATABASE_URI" envDefault:"host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable"`
+	JWTSecret   string `env:"JWT_SECRET_KEY" envDefault:"TOKEN"`
+	JWTExpires  int    `env:"JWT_EXPIRES" envDefault:"24"`
 }
 
 func validateAddress(s string) error {
@@ -31,7 +34,10 @@ func LoadConfig() (Config, error) {
 	pflag.StringVar(&config.HTTPAddress, "http-address", config.HTTPAddress, "HTTP server listen address (host:port)")
 	pflag.StringVar(&config.GRPCAddress, "grpc-address", config.GRPCAddress, "GRPC server listen address (host:port)")
 	pflag.StringVarP(&config.LogLevel, "log-level", "l", config.LogLevel, "logging level: debug, info, warn, error")
-	pflag.BoolVarP(&config.DevelopLog, "develop-log", "d", config.DevelopLog, "enabled develop log")
+	pflag.BoolVar(&config.DevelopLog, "develop-log", config.DevelopLog, "enabled develop log")
+	pflag.StringVarP(&config.DatabaseURI, "database", "d", config.DatabaseURI, "set database dsn")
+	pflag.StringVarP(&config.JWTSecret, "secret", "s", config.JWTSecret, "set secret token")
+	pflag.IntVarP(&config.JWTExpires, "expires", "e", config.JWTExpires, "set expires jwt")
 
 	pflag.Parse()
 

@@ -11,3 +11,9 @@ generate-proto:
 
 run:
 	go run ./cmd/server/main.go
+
+grpc-health:
+	grpc-health-probe -addr=localhost:9090
+
+up-docker:
+	docker compose -f ./tools/docker-compose.yaml up  -d

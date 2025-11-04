@@ -2,28 +2,60 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
+	"github.com/fatkulllin/gophkeeper/internal/auth"
 	"github.com/fatkulllin/gophkeeper/internal/config"
 	"github.com/fatkulllin/gophkeeper/internal/handlers"
 	"github.com/fatkulllin/gophkeeper/internal/logger"
+	"github.com/fatkulllin/gophkeeper/internal/password"
+	"github.com/fatkulllin/gophkeeper/internal/repository/postgres"
 	"github.com/fatkulllin/gophkeeper/internal/server"
+	"github.com/fatkulllin/gophkeeper/internal/service"
+	"github.com/fatkulllin/gophkeeper/migrations"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
-	server server.Server
+	server *server.Server
+	pgRepo *postgres.PGRepo
 }
 
 func NewApp(cfg config.Config) (App, error) {
 
+	pgRepo, err := postgres.NewPGRepo(cfg.DatabaseURI)
+
+	if err != nil {
+		return App{}, fmt.Errorf("connect to Database is unavailable: %w", err)
+	}
+
+	logger.Log.Debug("successfully connected to database")
+
+	err = pgRepo.Bootstrap(migrations.FS)
+
+	if err != nil {
+		return App{}, fmt.Errorf("migrate is not run: %w", err)
+	}
+
+	logger.Log.Debug("database migrated successfully")
+
+	tokenManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTExpires)
+
+	logger.Log.Debug("init jwt manager successfully")
+
+	password := password.NewPassword()
+
+	service := service.NewService(pgRepo, tokenManager, password)
 	healthHandler := handlers.NewHealthHandler()
 	loggerHandler := handlers.NewLoggerHandler()
-	server := server.NewServer(cfg, healthHandler, loggerHandler)
+	authHandler := handlers.NewAuthHandler(service)
+	server := server.NewServer(cfg, healthHandler, loggerHandler, authHandler)
 
 	return App{
 		server: server,
+		pgRepo: pgRepo,
 	}, nil
 }
 
