@@ -23,7 +23,7 @@ type Server struct {
 
 // NewRouter создаёт и настраивает HTTP-роутер с хендлерами и middleware.
 // Использует chi.Router и возвращает готовый маршрутизатор.
-func NewRouter(healthHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler, jwtSecret string) chi.Router {
+func NewRouter(jwtSecret string, healthHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler, recordHandler *handlers.RecordHandler) chi.Router {
 	r := chi.NewRouter()
 	r.Use(logging.RequestLogger)
 	r.Use(middleware.Recoverer)
@@ -35,12 +35,17 @@ func NewRouter(healthHandler *handlers.HealthHandler, loggerHandler *handlers.Lo
 	r.Post("/api/user/register", authHandler.UserRegister)
 	r.Post("/api/user/login", authHandler.UserLogin)
 	r.Post("/api/user/logout", authHandler.UserLogout)
-	r.Use(auth.AuthMiddleware(jwtSecret))
+	r.Group(func(r chi.Router) {
+		r.Use(auth.AuthMiddleware(jwtSecret))
+		r.Post("/api/records", recordHandler.CreateRecord)
+
+	})
+
 	return r
 }
 
-func NewServer(cfg config.Config, debugHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler) *Server {
-	router := NewRouter(debugHandler, loggerHandler, authHandler, cfg.JWTSecret)
+func NewServer(cfg config.Config, debugHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler, recordHandler *handlers.RecordHandler) *Server {
+	router := NewRouter(cfg.JWTSecret, debugHandler, loggerHandler, authHandler, recordHandler)
 	return &Server{
 		config: cfg,
 		httpServer: &http.Server{

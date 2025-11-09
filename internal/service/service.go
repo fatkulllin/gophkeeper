@@ -84,3 +84,20 @@ func (s *Service) UserLogin(ctx context.Context, user model.UserCredentials) (st
 
 	return tokenString, tokenExpires, nil
 }
+
+func (s *Service) CreateRecord(ctx context.Context, userID int, record model.RecordInput) {
+
+	// userID, err := s.repo.CreateRecord(ctx, user)
+	// if err != nil {
+	// 	return "", 0, err
+	// }
+	rec := model.Record{
+		UserID:   userID,
+		Type:     record.Type,
+		Metadata: record.Metadata,
+		Data:     record.Data,
+	}
+	fmt.Println(rec)
+
+	return
+}

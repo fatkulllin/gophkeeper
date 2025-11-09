@@ -10,7 +10,7 @@ generate-proto:
 		$(PROTO_SRC)/*.proto
 
 run:
-	go run ./cmd/server/main.go
+	go run ./cmd/server/main.go --develop-log
 
 grpc-health:
 	grpc-health-probe -addr=localhost:9090

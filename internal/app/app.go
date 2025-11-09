@@ -51,7 +51,8 @@ func NewApp(cfg config.Config) (App, error) {
 	healthHandler := handlers.NewHealthHandler()
 	loggerHandler := handlers.NewLoggerHandler()
 	authHandler := handlers.NewAuthHandler(service)
-	server := server.NewServer(cfg, healthHandler, loggerHandler, authHandler)
+	recordHandler := handlers.NewRecordHandler(service)
+	server := server.NewServer(cfg, healthHandler, loggerHandler, authHandler, recordHandler)
 
 	return App{
 		server: server,

@@ -26,7 +26,7 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 			claims := model.Claims{}
 
 			token, err := jwt.ParseWithClaims(tokenString, &claims,
-				func(t *jwt.Token) (interface{}, error) {
+				func(t *jwt.Token) (any, error) {
 					return []byte(secret), nil
 				})
 

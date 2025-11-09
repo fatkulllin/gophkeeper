@@ -9,14 +9,24 @@ import (
 )
 
 type Config struct {
-	HTTPAddress string `env:"HTTP_ADDRESS" envDefault:"localhost:8080"`
-	GRPCAddress string `env:"GRPC_ADDRESS" envDefault:"localhost:9090"`
-	DevelopLog  bool   `env:"DEVELOP_LOG" envDefault:"false"`
-	LogLevel    string `env:"LOG_LEVEL" envDefault:"INFO"`
-	DatabaseURI string `env:"DATABASE_URI" envDefault:"host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable"`
-	JWTSecret   string `env:"JWT_SECRET_KEY" envDefault:"TOKEN"`
-	JWTExpires  int    `env:"JWT_EXPIRES" envDefault:"24"`
+	HTTPAddress string `env:"HTTP_ADDRESS"`
+	GRPCAddress string `env:"GRPC_ADDRESS"`
+	DevelopLog  bool   `env:"DEVELOP_LOG"`
+	LogLevel    string `env:"LOG_LEVEL"`
+	DatabaseURI string `env:"DATABASE_URI"`
+	JWTSecret   string `env:"JWT_SECRET_KEY"`
+	JWTExpires  int    `env:"JWT_EXPIRES"`
 }
+
+const (
+	DefaultHTTPAddress = "localhost:8080"
+	DeafultGRPCAddress = "localhost:9090"
+	DeafultDevelopLog  = false
+	DefaultLogLevel    = "INFO"
+	DefaultDatabaseURI = "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable"
+	DefaultJWTSecret   = "TOKEN"
+	DefaultJWTExpires  = 24
+)
 
 func validateAddress(s string) error {
 	_, _, err := net.SplitHostPort(s)
@@ -28,7 +38,15 @@ func validateAddress(s string) error {
 
 func LoadConfig() (Config, error) {
 
-	config := Config{}
+	config := Config{
+		HTTPAddress: DefaultHTTPAddress,
+		GRPCAddress: DeafultGRPCAddress,
+		DevelopLog:  DeafultDevelopLog,
+		LogLevel:    DefaultLogLevel,
+		DatabaseURI: DefaultDatabaseURI,
+		JWTSecret:   DefaultJWTSecret,
+		JWTExpires:  DefaultJWTExpires,
+	}
 
 	pflag.CommandLine.SortFlags = false // чтобы флаги выводились в заданном порядке
 	pflag.StringVar(&config.HTTPAddress, "http-address", config.HTTPAddress, "HTTP server listen address (host:port)")
@@ -38,7 +56,6 @@ func LoadConfig() (Config, error) {
 	pflag.StringVarP(&config.DatabaseURI, "database", "d", config.DatabaseURI, "set database dsn")
 	pflag.StringVarP(&config.JWTSecret, "secret", "s", config.JWTSecret, "set secret token")
 	pflag.IntVarP(&config.JWTExpires, "expires", "e", config.JWTExpires, "set expires jwt")
-
 	pflag.Parse()
 
 	err := env.Parse(&config)
