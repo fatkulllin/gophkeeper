@@ -50,8 +50,8 @@ func NewApp(cfg config.Config) (App, error) {
 	service := service.NewService(pgRepo, tokenManager, password)
 	healthHandler := handlers.NewHealthHandler()
 	loggerHandler := handlers.NewLoggerHandler()
-	authHandler := handlers.NewAuthHandler(service)
-	recordHandler := handlers.NewRecordHandler(service)
+	authHandler := handlers.NewAuthHandler(service.User)
+	recordHandler := handlers.NewRecordHandler(service.Record)
 	server := server.NewServer(cfg, healthHandler, loggerHandler, authHandler, recordHandler)
 
 	return App{

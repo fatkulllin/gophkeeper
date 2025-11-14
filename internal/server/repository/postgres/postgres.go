@@ -86,17 +86,14 @@ func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model
 	return foundUser, nil
 }
 
-// func (s *PGRepo) CreateRecord(ctx context.Context, user model.RecordInput) (int, error) {
+func (s *PGRepo) CreateRecord(ctx context.Context, record model.Record) error {
+	return nil
+}
 
-// 	var id int
+func (s *PGRepo) GetRecords(ctx context.Context, userID int) ([]model.Record, error) {
+	return nil, nil
+}
 
-// 	row := s.conn.QueryRowContext(ctx, "INSERT INTO records (login, password_hash) VALUES ($1, $2) RETURNING id", user.Login, user.Password)
-
-// 	err := row.Scan(&id)
-
-// 	if err != nil {
-// 		return 0, fmt.Errorf("pg failed to insert new user: %w", err)
-// 	}
-
-// 	return id, nil
-// }
+func (s *PGRepo) DeleteRecord(ctx context.Context, recordID, userID int) error {
+	return nil
+}

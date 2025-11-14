@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
@@ -20,8 +21,9 @@ import (
 
 // DELETE /api/records/{id} — удалить.
 type RecordService interface {
-	CreateRecord(ctx context.Context, userID int, user model.RecordInput)
-	// UserLogin(ctx context.Context, user model.UserCredentials) (string, int, error)
+	Create(ctx context.Context, userID int64, input model.Record) error
+	GetAll(ctx context.Context, userID int) ([]model.Record, error)
+	Delete(ctx context.Context, userID, recordID int) error
 }
 type RecordHandler struct {
 	service  RecordService
@@ -30,12 +32,11 @@ type RecordHandler struct {
 
 func NewRecordHandler(service RecordService) *RecordHandler {
 	return &RecordHandler{service: service, validate: validator.New()}
-	// return &RecordHandler{validate: validator.New()}
-
 }
 
 func (h *RecordHandler) CreateRecord(res http.ResponseWriter, req *http.Request) {
 	var record model.RecordInput
+
 	claims, ok := req.Context().Value(ctxkeys.UserContextKey).(model.Claims)
 
 	if !ok {
@@ -49,10 +50,11 @@ func (h *RecordHandler) CreateRecord(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if err := h.validate.Struct(record); err != nil {
-		http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	h.service.CreateRecord(req.Context(), claims.UserID, record)
+	// if err := h.validate.Struct(record); err != nil {
+	// 	http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
+	fmt.Println(claims)
+	fmt.Println(record)
 
 }

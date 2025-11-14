@@ -6,11 +6,11 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL
 );
 CREATE TABLE records (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type TEXT NOT NULL,
-    metadata TEXT,
-    data BYTEA NOT NULL,
+    type TEXT NOT NULL,  -- login_password | text | binary | card
+    metadata TEXT,       -- произвольная информация: сайт, описание, теги
+    data BYTEA NOT NULL, -- зашифрованные данные (JSON или бинарь)
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

@@ -37,7 +37,7 @@ func NewRouter(jwtSecret string, healthHandler *handlers.HealthHandler, loggerHa
 	r.Post("/api/user/logout", authHandler.UserLogout)
 	r.Group(func(r chi.Router) {
 		r.Use(auth.AuthMiddleware(jwtSecret))
-		r.Post("/api/records", recordHandler.CreateRecord)
+		r.Post("/api/record", recordHandler.CreateRecord)
 
 	})
 

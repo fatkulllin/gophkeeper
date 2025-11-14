@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -34,24 +35,24 @@ type User struct {
 type RecordType string
 
 const (
-	RecordTypeLoginPassword RecordType = "login_password"
-	RecordTypeText          RecordType = "text"
-	RecordTypeBinary        RecordType = "binary"
-	RecordTypeCard          RecordType = "card"
+	TypeLoginPassword RecordType = "login_password"
+	TypeText          RecordType = "text"
+	TypeBinary        RecordType = "binary"
+	TypeBankCard      RecordType = "bank_card"
 )
 
 type Record struct {
-	ID        int        `json:"id"`
-	UserID    int        `json:"user_id"`
+	ID        int64      `json:"id"`
+	UserID    int64      `json:"user_id"`
 	Type      RecordType `json:"type"`
-	Metadata  string     `json:"metadata"`
-	Data      []byte     `json:"data"`
+	Metadata  string     `json:"metadata,omitempty"`
+	Data      []byte     `json:"data,omitempty"` // зашифрованное содержимое
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type RecordInput struct {
-	Type     RecordType `json:"type" validate:"required"`
-	Metadata string     `json:"metadata"`
-	Data     []byte     `json:"data" validate:"required"`
+	Type     RecordType      `json:"type"`
+	Metadata string          `json:"metadata,omitempty"`
+	Data     json.RawMessage `json:"data"` // сырые данные без парсинга
 }
