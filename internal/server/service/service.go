@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/model"
 )
 
 type Repositories interface {
@@ -52,7 +52,7 @@ func (s *Service) UserRegister(ctx context.Context, user model.UserCredentials) 
 	if err != nil {
 		return "", 0, err
 	}
-	tokenString, tokenExpires, err := s.tokenManager.Generate(userID, user.Login)
+	tokenString, tokenExpires, err := s.tokenManager.Generate(userID, user.Username)
 	if err != nil {
 		return "", 0, err
 	}
@@ -99,5 +99,4 @@ func (s *Service) CreateRecord(ctx context.Context, userID int, record model.Rec
 	}
 	fmt.Println(rec)
 
-	return
 }

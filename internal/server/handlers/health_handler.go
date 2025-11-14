@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/fatkulllin/gophkeeper/internal/logger"
+	"github.com/fatkulllin/gophkeeper/logger"
 	"go.uber.org/zap"
 )
 

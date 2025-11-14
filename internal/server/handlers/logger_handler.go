@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/fatkulllin/gophkeeper/internal/logger"
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )

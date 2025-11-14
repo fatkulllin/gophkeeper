@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
-	"github.com/fatkulllin/gophkeeper/internal/logger"
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
@@ -54,6 +55,7 @@ func (h *AuthHandler) UserRegister(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fmt.Println(user)
 	if err := h.validate.Struct(user); err != nil {
 		http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
 		return
@@ -62,11 +64,11 @@ func (h *AuthHandler) UserRegister(res http.ResponseWriter, req *http.Request) {
 	tokenString, tokenExpires, err := h.service.UserRegister(req.Context(), user)
 	if err != nil {
 		if errors.Is(err, model.ErrUserExists) {
-			logger.Log.Warn("attempt to register existing user", zap.String("login", user.Login))
+			logger.Log.Warn("attempt to register existing user", zap.String("login", user.Username))
 			http.Error(res, err.Error(), http.StatusConflict)
 			return
 		}
-		logger.Log.Error("save user", zap.String("login", user.Login), zap.Error(err))
+		logger.Log.Error("save user", zap.String("login", user.Username), zap.Error(err))
 		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -88,11 +90,11 @@ func (h *AuthHandler) UserLogin(res http.ResponseWriter, req *http.Request) {
 	tokenString, tokenExpires, err := h.service.UserLogin(req.Context(), user)
 	if err != nil {
 		if errors.Is(err, model.ErrIncorrectPassword) {
-			logger.Log.Warn("attempt to login incorrect password", zap.String("login", user.Login))
+			logger.Log.Warn("attempt to login incorrect password", zap.String("login", user.Username))
 			http.Error(res, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-		logger.Log.Error("login user", zap.String("login", user.Login), zap.Error(err))
+		logger.Log.Error("login user", zap.String("login", user.Username), zap.Error(err))
 		http.Error(res, "internal server error", http.StatusInternalServerError)
 		return
 	}

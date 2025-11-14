@@ -9,8 +9,11 @@ generate-proto:
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_SRC)/*.proto
 
-run:
+run-server:
 	go run ./cmd/server/main.go --develop-log
+
+run-client:
+	go run cmd/client/main.go $(CMD)
 
 grpc-health:
 	grpc-health-probe -addr=localhost:9090

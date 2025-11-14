@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fatkulllin/gophkeeper/internal/ctxkeys"
-	"github.com/fatkulllin/gophkeeper/internal/logger"
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
+	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )

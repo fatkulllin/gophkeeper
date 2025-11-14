@@ -1,0 +1,119 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
+package cmd
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
+)
+
+var (
+	cfgFile string
+	verbose bool
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd = &cobra.Command{
+		Use:   "gophkeeper",
+		Short: "",
+		Long:  ``,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			var err error
+			if err = initializeConfig(cmd); err != nil {
+				return err
+			}
+			if err = initializeLogger(); err != nil {
+				return err
+			}
+			configPath, _ := os.UserConfigDir()
+			logger.Log.Debug("config dir", zap.String("dir", configPath))
+			return nil
+
+		},
+		// Uncomment the following line if your bare application
+		// has an action associated with it:
+		// Run: func(cmd *cobra.Command, args []string) { },
+	}
+)
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
+func init() {
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.my-cli.yaml)")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	rootCmd.PersistentFlags().String("log-level", "info", "logging level (debug, info, warn, error)")
+	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
+
+	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
+
+}
+
+func initializeLogger() error {
+
+	err := logger.Initialize(viper.GetString("log-level"), viper.GetBool("develop-log"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initializeConfig(cmd *cobra.Command) error {
+	// 1. Set up Viper to use environment variables.
+	viper.SetEnvPrefix("GOPHKEEPER")
+	// Allow for nested keys in environment variables (e.g. `GOPHKEEPER_DATABASE_HOST`)
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "*", "-", "_"))
+	viper.AutomaticEnv()
+
+	// 2. Handle the configuration file.
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+		// This is an optional but useful step to debug your config.
+		fmt.Println("Configuration initialized. Using config file:", viper.ConfigFileUsed())
+	}
+
+	// 3. Read the configuration file.
+	// If a config file is found, read it in. We use a robust error check
+	// to ignore "file not found" errors, but panic on any other error.
+	if err := viper.ReadInConfig(); err != nil {
+		// It's okay if the config file doesn't exist.
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if !errors.As(err, &configFileNotFoundError) {
+			return err
+		}
+	}
+
+	// 4. Bind Cobra flags to Viper.
+	// This is the magic that makes the flag values available through Viper.
+	// It binds the full flag set of the command passed in.
+	err := viper.BindPFlags(cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	if err := viper.BindPFlags(cmd.Flags()); err != nil {
+		return err
+	}
+
+	return nil
+
+}

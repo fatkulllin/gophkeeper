@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/fatkulllin/gophkeeper/internal/app"
-	"github.com/fatkulllin/gophkeeper/internal/config"
-	"github.com/fatkulllin/gophkeeper/internal/logger"
+	"github.com/fatkulllin/gophkeeper/internal/server/app"
+	"github.com/fatkulllin/gophkeeper/internal/server/config"
+	"github.com/fatkulllin/gophkeeper/logger"
 	"go.uber.org/zap"
 )
 

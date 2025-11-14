@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/model"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )
@@ -46,7 +46,7 @@ func (s *PGRepo) Bootstrap(fs embed.FS) error {
 }
 
 func (s *PGRepo) ExistUser(ctx context.Context, user model.UserCredentials) (bool, error) {
-	row := s.conn.QueryRowContext(ctx, "SELECT login FROM users WHERE login = $1", user.Login)
+	row := s.conn.QueryRowContext(ctx, "SELECT login FROM users WHERE login = $1", user.Username)
 	var userScan string
 	err := row.Scan(&userScan)
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (in
 
 	var id int
 
-	row := s.conn.QueryRowContext(ctx, "INSERT INTO users (login, password_hash) VALUES ($1, $2) RETURNING id", user.Login, user.Password)
+	row := s.conn.QueryRowContext(ctx, "INSERT INTO users (login, password_hash) VALUES ($1, $2) RETURNING id", user.Username, user.Password)
 
 	err := row.Scan(&id)
 
@@ -75,7 +75,7 @@ func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (in
 
 func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model.User, error) {
 	var foundUser model.User
-	row := s.conn.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", user.Login)
+	row := s.conn.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", user.Username)
 	err := row.Scan(&foundUser.ID, &foundUser.Login, &foundUser.PasswordHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

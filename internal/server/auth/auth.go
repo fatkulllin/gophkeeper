@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/fatkulllin/gophkeeper/internal/model"
+	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/golang-jwt/jwt/v5"
 )
 

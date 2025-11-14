@@ -18,7 +18,7 @@ type LogLevel struct {
 }
 
 type UserCredentials struct {
-	Login    string `json:"login" validate:"required"`
+	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
