@@ -23,11 +23,15 @@ import (
 // loginCmd represents the serve command
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "Start the application server",
-	Long: `Start the application server on the specified host and port.
+	Short: "Authenticate an existing user",
+	Long: `Authenticate an existing user with the GophKeeper server.
 
-   The serve command will start a web server that can handle requests
-   and provide API endpoints for your application.`,
+Examples:
+  gophkeeper login -u alice -p secret123
+  gophkeeper login --username bob --password mypass
+
+After successful authentication, your access token is stored locally
+and used for future requests.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		username := viper.GetString("username")
