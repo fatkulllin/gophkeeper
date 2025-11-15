@@ -26,6 +26,7 @@ type RecordRepository interface {
 	CreateRecord(ctx context.Context, record model.Record) error
 	GetRecords(ctx context.Context, userID int) ([]model.Record, error)
 	DeleteRecord(ctx context.Context, recordID, userID int) error
+	GetEncryptedKeyUser(ctx context.Context, userID int) (string, error)
 }
 
 type TokenManager interface {
@@ -37,9 +38,17 @@ type Password interface {
 	Compare(hash string, password string) (bool, error)
 }
 
-func NewService(repo Repositories, tokenManager TokenManager, password Password) *Service {
+type CryptoUtil interface {
+	EncryptWithMasterKey(src []byte) (string, error)
+	GenerateRandom(size int) ([]byte, error)
+	DecryptWithMasterKey(src string) ([]byte, error)
+	EncryptString(src, key []byte) (string, error)
+	Decrypt(encodedCipher string, key []byte) ([]byte, error)
+}
+
+func NewService(repo Repositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *Service {
 	return &Service{
-		User:   NewUserService(repo, tokenManager, password),
-		Record: NewRecordService(repo),
+		User:   NewUserService(repo, tokenManager, password, cryptoUtil),
+		Record: NewRecordService(repo, cryptoUtil),
 	}
 }

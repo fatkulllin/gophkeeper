@@ -62,7 +62,7 @@ func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (in
 
 	var id int
 
-	row := s.conn.QueryRowContext(ctx, "INSERT INTO users (login, password_hash) VALUES ($1, $2) RETURNING id", user.Username, user.Password)
+	row := s.conn.QueryRowContext(ctx, "INSERT INTO users (login, password_hash, encrypted_key) VALUES ($1, $2, $3) RETURNING id", user.Username, user.Password, user.EncryptedKey)
 
 	err := row.Scan(&id)
 
@@ -75,7 +75,7 @@ func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (in
 
 func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model.User, error) {
 	var foundUser model.User
-	row := s.conn.QueryRowContext(ctx, "SELECT * FROM users WHERE login = $1", user.Username)
+	row := s.conn.QueryRowContext(ctx, "SELECT id, login, password_hash FROM users WHERE login = $1", user.Username)
 	err := row.Scan(&foundUser.ID, &foundUser.Login, &foundUser.PasswordHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -86,7 +86,27 @@ func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model
 	return foundUser, nil
 }
 
+func (s *PGRepo) GetEncryptedKeyUser(ctx context.Context, userID int) (string, error) {
+	var encryptedKey string
+	row := s.conn.QueryRowContext(ctx, "SELECT encrypted_key FROM users WHERE id = $1;", userID)
+	err := row.Scan(&encryptedKey)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", fmt.Errorf("user not found")
+		}
+		return "", err
+	}
+	return encryptedKey, nil
+}
+
 func (s *PGRepo) CreateRecord(ctx context.Context, record model.Record) error {
+
+	_, err := s.conn.ExecContext(ctx, "INSERT INTO records (user_id, type, metadata, data) VALUES ($1, $2, $3, $4)", record.UserID, record.Type, record.Metadata, record.Data)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

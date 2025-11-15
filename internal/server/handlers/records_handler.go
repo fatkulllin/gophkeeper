@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
@@ -21,7 +20,7 @@ import (
 
 // DELETE /api/records/{id} — удалить.
 type RecordService interface {
-	Create(ctx context.Context, userID int64, input model.Record) error
+	Create(ctx context.Context, userID int, input model.RecordInput) error
 	GetAll(ctx context.Context, userID int) ([]model.Record, error)
 	Delete(ctx context.Context, userID, recordID int) error
 }
@@ -54,7 +53,9 @@ func (h *RecordHandler) CreateRecord(res http.ResponseWriter, req *http.Request)
 	// 	http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
 	// 	return
 	// }
-	fmt.Println(claims)
-	fmt.Println(record)
+
+	if err := h.service.Create(req.Context(), claims.UserID, record); err != nil {
+		http.Error(res, "error", http.StatusInternalServerError)
+	}
 
 }

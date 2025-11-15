@@ -16,6 +16,7 @@ type Config struct {
 	DatabaseURI string `env:"DATABASE_URI"`
 	JWTSecret   string `env:"JWT_SECRET_KEY"`
 	JWTExpires  int    `env:"JWT_EXPIRES"`
+	MasterKey   string `env:"MASTER_KEY"`
 }
 
 const (
@@ -26,6 +27,7 @@ const (
 	DefaultDatabaseURI = "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable"
 	DefaultJWTSecret   = "TOKEN"
 	DefaultJWTExpires  = 24
+	DefaultMasterKey   = "M2WXo9hmd9pHMoaY8UHQokJhGXetCNBP"
 )
 
 func validateAddress(s string) error {
@@ -46,6 +48,7 @@ func LoadConfig() (Config, error) {
 		DatabaseURI: DefaultDatabaseURI,
 		JWTSecret:   DefaultJWTSecret,
 		JWTExpires:  DefaultJWTExpires,
+		MasterKey:   DefaultMasterKey,
 	}
 
 	pflag.CommandLine.SortFlags = false // чтобы флаги выводились в заданном порядке
@@ -56,6 +59,7 @@ func LoadConfig() (Config, error) {
 	pflag.StringVarP(&config.DatabaseURI, "database", "d", config.DatabaseURI, "set database dsn")
 	pflag.StringVarP(&config.JWTSecret, "secret", "s", config.JWTSecret, "set secret token")
 	pflag.IntVarP(&config.JWTExpires, "expires", "e", config.JWTExpires, "set expires jwt")
+	pflag.StringVarP(&config.MasterKey, "master-key", "m", config.MasterKey, "set master key")
 	pflag.Parse()
 
 	err := env.Parse(&config)

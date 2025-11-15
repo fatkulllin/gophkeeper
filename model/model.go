@@ -19,17 +19,22 @@ type LogLevel struct {
 }
 
 type UserCredentials struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Username     string `json:"username" validate:"required"`
+	Password     string `json:"password" validate:"required"`
+	EncryptedKey string `json:"omitempty"`
 }
 
 var ErrUserExists = errors.New("user already exists")
 var ErrIncorrectPassword = errors.New("incorrect password")
 
+// TODO# возращается ошибка 500 когда пользовате не найден
+// var ErrUserNotFound = errors.New("user not found")
+
 type User struct {
 	ID           int
 	Login        string
 	PasswordHash string
+	EncryptedKey string
 }
 
 type RecordType string
@@ -43,7 +48,7 @@ const (
 
 type Record struct {
 	ID        int64      `json:"id"`
-	UserID    int64      `json:"user_id"`
+	UserID    int        `json:"user_id"`
 	Type      RecordType `json:"type"`
 	Metadata  string     `json:"metadata,omitempty"`
 	Data      []byte     `json:"data,omitempty"` // зашифрованное содержимое

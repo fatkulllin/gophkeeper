@@ -45,7 +45,6 @@ and used for future requests.`,
 		}
 
 		resp, err := loginUser(ctx, client, username, password, url)
-
 		if err != nil {
 			return fmt.Errorf("internal error: %v", err.Error())
 		}

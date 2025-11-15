@@ -11,14 +11,17 @@ type UserService struct {
 	repo         UserRepositories
 	password     Password
 	tokenManager TokenManager
+	cryptoUtil   CryptoUtil
 }
 
-func NewUserService(repo UserRepositories, tokenManager TokenManager, password Password) *UserService {
-	return &UserService{repo: repo, tokenManager: tokenManager, password: password}
+func NewUserService(repo UserRepositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *UserService {
+	return &UserService{repo: repo, tokenManager: tokenManager, password: password, cryptoUtil: cryptoUtil}
 }
 
 func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentials) (string, int, error) {
+
 	userExists, err := s.repo.ExistUser(ctx, user)
+
 	if err != nil {
 		return "", 0, err
 	}
@@ -33,11 +36,25 @@ func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentia
 	}
 	user.Password = hashPassword
 
+	random, err := s.cryptoUtil.GenerateRandom(32)
+
+	if err != nil {
+		return "", 0, err
+	}
+
+	user.EncryptedKey, err = s.cryptoUtil.EncryptWithMasterKey(random)
+
+	if err != nil {
+		return "", 0, err
+	}
+
 	userID, err := s.repo.CreateUser(ctx, user)
 	if err != nil {
 		return "", 0, err
 	}
+
 	tokenString, tokenExpires, err := s.tokenManager.Generate(userID, user.Username)
+
 	if err != nil {
 		return "", 0, err
 	}
@@ -66,6 +83,5 @@ func (s *UserService) UserLogin(ctx context.Context, user model.UserCredentials)
 	if err != nil {
 		return "", 0, err
 	}
-
 	return tokenString, tokenExpires, nil
 }

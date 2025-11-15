@@ -10,7 +10,7 @@ generate-proto:
 		$(PROTO_SRC)/*.proto
 
 run-server:
-	go run ./cmd/server/main.go --develop-log
+	go run ./cmd/server/main.go --develop-log  --log-level=debug
 
 run-client:
 	go run cmd/client/main.go $(CMD)
@@ -20,3 +20,6 @@ grpc-health:
 
 up-docker:
 	docker compose -f ./tools/docker-compose.yaml up  -d
+
+master-key:
+	@head -c 24 /dev/urandom | base64 | tr -d '\n' | cut -c1-32

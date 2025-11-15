@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/logger"
@@ -55,7 +54,6 @@ func (h *AuthHandler) UserRegister(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println(user)
 	if err := h.validate.Struct(user); err != nil {
 		http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
 		return
@@ -79,11 +77,13 @@ func (h *AuthHandler) UserLogin(res http.ResponseWriter, req *http.Request) {
 	var user model.UserCredentials
 
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
+		logger.Log.Error("", zap.Error(err))
 		http.Error(res, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
 	if err := h.validate.Struct(user); err != nil {
+		logger.Log.Error("", zap.Error(err))
 		http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
 		return
 	}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatkulllin/gophkeeper/internal/server/auth"
 	"github.com/fatkulllin/gophkeeper/internal/server/config"
+	"github.com/fatkulllin/gophkeeper/internal/server/cryptoutil"
 	"github.com/fatkulllin/gophkeeper/internal/server/handlers"
 	"github.com/fatkulllin/gophkeeper/internal/server/password"
 	"github.com/fatkulllin/gophkeeper/internal/server/repository/postgres"
@@ -46,8 +47,9 @@ func NewApp(cfg config.Config) (App, error) {
 	logger.Log.Debug("init jwt manager successfully")
 
 	password := password.NewPassword()
+	cryptoutil := cryptoutil.NewCryptoUtil(cfg.MasterKey)
 
-	service := service.NewService(pgRepo, tokenManager, password)
+	service := service.NewService(pgRepo, tokenManager, password, cryptoutil)
 	healthHandler := handlers.NewHealthHandler()
 	loggerHandler := handlers.NewLoggerHandler()
 	authHandler := handlers.NewAuthHandler(service.User)
