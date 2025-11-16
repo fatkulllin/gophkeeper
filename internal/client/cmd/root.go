@@ -10,17 +10,16 @@ import (
 	"strings"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	usermanager "github.com/fatkulllin/gophkeeper/internal/client/cmd/user"
 	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-var (
-	cfgFile string
+func NewRootCmd() *cobra.Command {
 
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:   "gophkeeper",
 		Short: "",
 		Long:  ``,
@@ -37,35 +36,25 @@ var (
 			app.InitApp()
 			return nil
 		},
-		// Uncomment the following line if your bare application
-		// has an action associated with it:
-		// Run: func(cmd *cobra.Command, args []string) { },
 	}
+	rootCmd.PersistentFlags().String("log-level", "info", "logging level (debug, info, warn, error)")
+	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
+	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
+	rootCmd.AddCommand(usermanager.NewCmdUser())
+	return rootCmd
+}
+
+var (
+	cfgFile string
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
+	err := NewRootCmd().Execute()
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.my-cli.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.PersistentFlags().String("log-level", "info", "logging level (debug, info, warn, error)")
-	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
-
-	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
-
 }
 
 func initializeLogger() error {
@@ -110,8 +99,7 @@ func initializeConfig(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	if err := viper.BindPFlags(cmd.Flags()); err != nil {
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 		return err
 	}
 
