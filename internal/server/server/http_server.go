@@ -40,6 +40,8 @@ func NewRouter(jwtSecret string, healthHandler *handlers.HealthHandler, loggerHa
 		r.Post("/api/record", recordHandler.CreateRecord)
 		r.Get("/api/records", recordHandler.ListRecords)
 		r.Get("/api/records/{id}", recordHandler.GetRecord)
+		r.Delete("/api/records/{id}", recordHandler.Delete)
+		r.Patch("/api/records/{id}", recordHandler.Update)
 
 	})
 

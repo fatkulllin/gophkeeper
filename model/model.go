@@ -65,3 +65,8 @@ type RecordInput struct {
 	Metadata string          `json:"metadata,omitempty"`
 	Data     json.RawMessage `json:"data"` // сырые данные без парсинга
 }
+
+type RecordUpdateInput struct {
+	Metadata *string          `json:"metadata,omitempty"`
+	Data     *json.RawMessage `json:"data"` // сырые данные без парсинга
+}

@@ -24,10 +24,11 @@ type UserRepositories interface {
 
 type RecordRepository interface {
 	CreateRecord(ctx context.Context, record model.Record) error
-	DeleteRecord(ctx context.Context, recordID, userID int) error
+	DeleteRecord(ctx context.Context, userID int, idRecord string) error
 	GetEncryptedKeyUser(ctx context.Context, userID int) (string, error)
 	GetAllRecords(ctx context.Context, userID int) ([]model.Record, error)
 	GetRecord(ctx context.Context, userID int, idRecord string) (model.Record, error)
+	UpdateRecord(ctx context.Context, userID int, idRecord string, record model.Record) error
 }
 
 type TokenManager interface {

@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"go.uber.org/zap"
 )
 
 type PGRepo struct {
@@ -141,7 +143,16 @@ func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record,
 	return records, nil
 }
 
-func (s *PGRepo) DeleteRecord(ctx context.Context, recordID, userID int) error {
+func (s *PGRepo) DeleteRecord(ctx context.Context, userID int, idRecord string) error {
+	result, err := s.conn.ExecContext(ctx, "DELETE FROM records WHERE id = $1 AND user_id = $2 ", idRecord, userID)
+
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
 	return nil
 }
 
@@ -162,4 +173,40 @@ func (s *PGRepo) GetRecord(ctx context.Context, userID int, idRecord string) (mo
 	}
 
 	return record, nil
+}
+
+func (s *PGRepo) UpdateRecord(ctx context.Context, userID int, idRecord string, record model.Record) error {
+
+	if record.Metadata == "" && record.Data == nil {
+		return nil
+	}
+
+	query := "UPDATE records SET "
+	args := []any{}
+	idx := 1
+
+	if record.Metadata != "" {
+		query += fmt.Sprintf("metadata = $%d", idx)
+		args = append(args, record.Metadata)
+		idx++
+	}
+
+	if record.Data != nil {
+		if len(args) > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("data = $%d", idx)
+		args = append(args, record.Data)
+		idx++
+	}
+
+	query += fmt.Sprintf(", updated_at = NOW() WHERE id = $%d AND user_id = $%d", idx, idx+1)
+	args = append(args, idRecord, userID)
+	logger.Log.Debug("run query update", zap.String("query", query), zap.Any("args", args))
+
+	_, err := s.conn.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
 }

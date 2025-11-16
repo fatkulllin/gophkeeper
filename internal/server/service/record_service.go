@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/fatkulllin/gophkeeper/logger"
@@ -26,7 +28,7 @@ func (s RecordService) Create(ctx context.Context, userID int, input model.Recor
 		UserID:   userID,
 		Type:     input.Type,
 		Metadata: input.Metadata,
-		Data:     input.Data, // можно будет шифровать здесь
+		Data:     input.Data,
 	}
 
 	encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
@@ -105,9 +107,51 @@ func (s RecordService) Get(ctx context.Context, userID int, idRecord string) (mo
 	}, nil
 }
 
-func (s RecordService) Delete(ctx context.Context, userID, recordID int) error {
-	if err := s.repo.DeleteRecord(ctx, recordID, userID); err != nil {
+func (s RecordService) Delete(ctx context.Context, userID int, idRecord string) error {
+	if err := s.repo.DeleteRecord(ctx, userID, idRecord); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			logger.Log.Debug("no rows dor delete", zap.String("record id", idRecord), zap.Int("user id", userID))
+			return sql.ErrNoRows
+		}
+		logger.Log.Error("", zap.Error(err))
 		return fmt.Errorf("delete record: %w", err)
+	}
+	return nil
+}
+
+func (s RecordService) Update(ctx context.Context, userID int, idRecord string, input model.RecordUpdateInput) error {
+	var record model.Record
+	if input.Metadata == nil && input.Data == nil {
+		return errors.New("nothing to update")
+	}
+
+	if input.Data != nil {
+		encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return err
+		}
+
+		decryptUserKey, err := s.cryptoUtil.DecryptWithMasterKey(encryptedKey)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return err
+		}
+
+		encryptData, err := s.cryptoUtil.EncryptString(*input.Data, decryptUserKey)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return err
+		}
+		record.Data = []byte(encryptData)
+	}
+	if input.Metadata != nil {
+		record.Metadata = *input.Metadata
+	}
+	err := s.repo.UpdateRecord(ctx, userID, idRecord, record)
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return err
 	}
 	return nil
 }
