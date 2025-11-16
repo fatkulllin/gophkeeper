@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatkulllin/gophkeeper/internal/client/app"
 	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ import (
 
 var (
 	cfgFile string
-	verbose bool
+
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "gophkeeper",
@@ -33,8 +34,8 @@ var (
 			}
 			configPath, _ := os.UserConfigDir()
 			logger.Log.Debug("config dir", zap.String("dir", configPath))
+			app.InitApp()
 			return nil
-
 		},
 		// Uncomment the following line if your bare application
 		// has an action associated with it:

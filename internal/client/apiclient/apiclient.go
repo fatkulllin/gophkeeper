@@ -9,18 +9,18 @@ import (
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
 )
 
-type Client struct {
+type ApiClient struct {
 	httpClient *http.Client
 }
 
-func NewClient(waitTime int64) *Client {
+func NewApiClient(waitTime int64) *ApiClient {
 	timeoutClient := time.Duration(waitTime)
-	return &Client{
+	return &ApiClient{
 		httpClient: &http.Client{Timeout: timeoutClient * time.Second},
 	}
 }
 
-func (client *Client) Do(req *http.Request) (*models.Response, error) {
+func (client *ApiClient) Do(req *http.Request) (*models.Response, error) {
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error sending request: %w", err)

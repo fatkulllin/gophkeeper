@@ -4,17 +4,13 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/apiclient"
+	"github.com/fatkulllin/gophkeeper/internal/client/app"
 	"github.com/fatkulllin/gophkeeper/internal/client/filemanager"
-	"github.com/fatkulllin/gophkeeper/internal/client/models"
 	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,7 +29,6 @@ Upon successful registration, you will be automatically logged in.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		username := viper.GetString("username")
 		password := viper.GetString("password")
-		client := apiclient.NewClient(10)
 		ctx := context.Background()
 		url := viper.GetString("server") + "/api/user/register"
 
@@ -41,7 +36,7 @@ Upon successful registration, you will be automatically logged in.`,
 			return fmt.Errorf("username and password are required")
 		}
 
-		resp, err := registerUser(ctx, client, username, password, url)
+		resp, err := app.CliService.User.LoginUser(ctx, username, password, url)
 
 		if err != nil {
 			return fmt.Errorf("internal error: %v", err.Error())
@@ -91,32 +86,32 @@ func init() {
 	registerCmd.Flags().StringP("password", "p", "", "password")
 }
 
-func registerUser(ctx context.Context, client *apiclient.Client, username, password, url string) (*models.Response, error) {
+// func registerUser(ctx context.Context, client *apiclient.Client, username, password, url string) (*models.Response, error) {
 
-	user := map[string]string{
-		"username": username,
-		"password": password,
-	}
+// 	user := map[string]string{
+// 		"username": username,
+// 		"password": password,
+// 	}
 
-	reqBody, err := json.Marshal(user)
+// 	reqBody, err := json.Marshal(user)
 
-	if err != nil {
-		return &models.Response{}, fmt.Errorf("failed marshal batch: %w", err)
-	}
+// 	if err != nil {
+// 		return &models.Response{}, fmt.Errorf("failed marshal batch: %w", err)
+// 	}
 
-	bodyReader := bytes.NewBuffer(reqBody)
+// 	bodyReader := bytes.NewBuffer(reqBody)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bodyReader)
+// 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bodyReader)
 
-	if err != nil {
-		return &models.Response{}, fmt.Errorf("failed to create request: %w", err)
-	}
+// 	if err != nil {
+// 		return &models.Response{}, fmt.Errorf("failed to create request: %w", err)
+// 	}
 
-	resp, err := client.Do(req)
+// 	resp, err := client.Do(req)
 
-	if err != nil {
-		return &models.Response{}, fmt.Errorf("response error: %w", err)
-	}
+// 	if err != nil {
+// 		return &models.Response{}, fmt.Errorf("response error: %w", err)
+// 	}
 
-	return resp, nil
-}
+// 	return resp, nil
+// }
