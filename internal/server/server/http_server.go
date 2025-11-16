@@ -38,6 +38,8 @@ func NewRouter(jwtSecret string, healthHandler *handlers.HealthHandler, loggerHa
 	r.Group(func(r chi.Router) {
 		r.Use(auth.AuthMiddleware(jwtSecret))
 		r.Post("/api/record", recordHandler.CreateRecord)
+		r.Get("/api/records", recordHandler.ListRecords)
+		r.Get("/api/records/{id}", recordHandler.GetRecord)
 
 	})
 

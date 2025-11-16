@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -47,13 +46,18 @@ const (
 )
 
 type Record struct {
-	ID        int64      `json:"id"`
-	UserID    int        `json:"user_id"`
-	Type      RecordType `json:"type"`
-	Metadata  string     `json:"metadata,omitempty"`
-	Data      []byte     `json:"data,omitempty"` // зашифрованное содержимое
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID       int64      `json:"id"`
+	UserID   int        `json:"user_id"`
+	Type     RecordType `json:"type"`
+	Metadata string     `json:"metadata,omitempty"`
+	Data     []byte     `json:"data,omitempty"` // зашифрованное содержимое
+}
+
+type RecordResponse struct {
+	ID       int64           `json:"id"`
+	Type     RecordType      `json:"type"`
+	Metadata string          `json:"metadata,omitempty"`
+	Data     json.RawMessage `json:"data,omitempty"` // зашифрованное содержимое
 }
 
 type RecordInput struct {

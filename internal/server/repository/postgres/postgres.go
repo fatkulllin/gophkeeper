@@ -83,6 +83,7 @@ func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model
 		}
 		return model.User{}, err
 	}
+
 	return foundUser, nil
 }
 
@@ -110,10 +111,55 @@ func (s *PGRepo) CreateRecord(ctx context.Context, record model.Record) error {
 	return nil
 }
 
-func (s *PGRepo) GetRecords(ctx context.Context, userID int) ([]model.Record, error) {
-	return nil, nil
+func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record, error) {
+	records := make([]model.Record, 0)
+	rows, err := s.conn.QueryContext(ctx, `
+		SELECT id, user_id, type, metadata
+		FROM records
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		`, userID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var r model.Record
+		err = rows.Scan(&r.ID, &r.UserID, &r.Type, &r.Metadata)
+		if err != nil {
+			return nil, err
+		}
+
+		records = append(records, r)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(records)
+	return records, nil
 }
 
 func (s *PGRepo) DeleteRecord(ctx context.Context, recordID, userID int) error {
 	return nil
+}
+
+func (s *PGRepo) GetRecord(ctx context.Context, userID int, idRecord string) (model.Record, error) {
+	var record model.Record
+	row := s.conn.QueryRowContext(ctx, `
+		SELECT id, type, metadata, data
+		FROM records
+		WHERE user_id = $1 AND id = $2
+		ORDER BY created_at DESC
+		`, userID, idRecord)
+	err := row.Scan(&record.ID, &record.Type, &record.Metadata, &record.Data)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return model.Record{}, fmt.Errorf("record not found for user %v", userID)
+		}
+		return model.Record{}, err
+	}
+
+	return record, nil
 }
