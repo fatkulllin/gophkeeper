@@ -8,7 +8,8 @@ import (
 )
 
 type Service struct {
-	User *UserService
+	User   *UserService
+	Record *RecordService
 }
 
 type ApiClient interface {
@@ -20,8 +21,9 @@ type FileManager interface {
 	LoadFile(filename string) (string, error)
 }
 
-func NewService(apiClient ApiClient, filemManager FileManager) *Service {
+func NewService(apiClient ApiClient, fileManager FileManager) *Service {
 	return &Service{
-		User: NewUserService(apiClient, filemManager),
+		User:   NewUserService(apiClient, fileManager),
+		Record: NewRecordService(apiClient, fileManager),
 	}
 }

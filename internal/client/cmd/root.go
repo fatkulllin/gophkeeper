@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/cmd/record"
 	usermanager "github.com/fatkulllin/gophkeeper/internal/client/cmd/user"
 	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/spf13/cobra"
@@ -41,6 +42,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
 	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
 	rootCmd.AddCommand(usermanager.NewCmdUser())
+	rootCmd.AddCommand(record.NewCmdRecord())
 	return rootCmd
 }
 

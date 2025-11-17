@@ -73,5 +73,7 @@ Upon successful registration, you will be automatically logged in.`,
 	}
 	registerCmd.Flags().StringP("username", "u", "", "username")
 	registerCmd.Flags().StringP("password", "p", "", "password")
+	registerCmd.MarkFlagRequired("username")
+	registerCmd.MarkFlagRequired("password")
 	return registerCmd
 }

@@ -8,3 +8,8 @@ type Response struct {
 	Body       []byte
 	Cookies    []*http.Cookie
 }
+
+type UserRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

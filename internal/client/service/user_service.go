@@ -24,11 +24,10 @@ func NewUserService(apiClient ApiClient, fileManager FileManager) *UserService {
 
 func (s *UserService) LoginUser(ctx context.Context, username, password, url string) (*models.Response, error) {
 
-	user := map[string]string{
-		"username": username,
-		"password": password,
+	user := models.UserRequest{
+		Username: username,
+		Password: password,
 	}
-
 	reqBody, err := json.Marshal(user)
 
 	if err != nil {
@@ -53,11 +52,11 @@ func (s *UserService) LoginUser(ctx context.Context, username, password, url str
 }
 
 func (s *UserService) RegisterUser(ctx context.Context, username, password, url string) (*models.Response, error) {
-	user := map[string]string{
-		"username": username,
-		"password": password,
-	}
 
+	user := models.UserRequest{
+		Username: username,
+		Password: password,
+	}
 	reqBody, err := json.Marshal(user)
 
 	if err != nil {

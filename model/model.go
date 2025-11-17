@@ -50,23 +50,23 @@ type Record struct {
 	UserID   int        `json:"user_id"`
 	Type     RecordType `json:"type"`
 	Metadata string     `json:"metadata,omitempty"`
-	Data     []byte     `json:"data,omitempty"` // зашифрованное содержимое
+	Data     []byte     `json:"data,omitempty"`
 }
 
 type RecordResponse struct {
 	ID       int64           `json:"id"`
 	Type     RecordType      `json:"type"`
 	Metadata string          `json:"metadata,omitempty"`
-	Data     json.RawMessage `json:"data,omitempty"` // зашифрованное содержимое
+	Data     json.RawMessage `json:"data,omitempty"`
 }
 
 type RecordInput struct {
 	Type     RecordType      `json:"type"`
 	Metadata string          `json:"metadata,omitempty"`
-	Data     json.RawMessage `json:"data"` // сырые данные без парсинга
+	Data     json.RawMessage `json:"data"`
 }
 
 type RecordUpdateInput struct {
 	Metadata *string          `json:"metadata,omitempty"`
-	Data     *json.RawMessage `json:"data"` // сырые данные без парсинга
+	Data     *json.RawMessage `json:"data,omitempty"`
 }
