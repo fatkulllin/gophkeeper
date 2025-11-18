@@ -1,3 +1,5 @@
+// Package service содержит бизнес-логику работы с пользователями и их записями.
+
 package service
 
 import (
@@ -11,11 +13,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// RecordService отвечает за логику создания, чтения, обновления
+// и удаления записей пользователя. Он выполняет шифрование и расшифровку
+// данных с использованием пользовательского ключа.
 type RecordService struct {
 	repo       RecordRepository
 	cryptoUtil CryptoUtil
 }
 
+// NewRecordService создаёт новый сервис для работы с записями.
 func NewRecordService(repo RecordRepository, cryptoUtil CryptoUtil) *RecordService {
 	return &RecordService{
 		repo:       repo,
@@ -23,12 +29,11 @@ func NewRecordService(repo RecordRepository, cryptoUtil CryptoUtil) *RecordServi
 	}
 }
 
-func (s RecordService) Create(ctx context.Context, userID int, input model.RecordInput) error {
+func (s *RecordService) Create(ctx context.Context, userID int, input model.RecordInput) error {
 	record := model.Record{
 		UserID:   userID,
 		Type:     input.Type,
 		Metadata: input.Metadata,
-		Data:     input.Data,
 	}
 
 	encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
@@ -51,7 +56,7 @@ func (s RecordService) Create(ctx context.Context, userID int, input model.Recor
 
 	record.Data = []byte(encryptData)
 
-	logger.Log.Debug("decrypt data", zap.ByteString("data", record.Data))
+	logger.Log.Debug("encrypted data", zap.String("data", encryptData))
 	err = s.repo.CreateRecord(ctx, record)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
@@ -61,7 +66,7 @@ func (s RecordService) Create(ctx context.Context, userID int, input model.Recor
 	return nil
 }
 
-func (s RecordService) GetAll(ctx context.Context, userID int) ([]model.Record, error) {
+func (s *RecordService) GetAll(ctx context.Context, userID int) ([]model.Record, error) {
 
 	records, err := s.repo.GetAllRecords(ctx, userID)
 	if err != nil {
@@ -72,7 +77,7 @@ func (s RecordService) GetAll(ctx context.Context, userID int) ([]model.Record, 
 	return records, nil
 }
 
-func (s RecordService) Get(ctx context.Context, userID int, idRecord string) (model.RecordResponse, error) {
+func (s *RecordService) Get(ctx context.Context, userID int, idRecord string) (model.RecordResponse, error) {
 	record, err := s.repo.GetRecord(ctx, userID, idRecord)
 
 	if err != nil {
@@ -106,10 +111,10 @@ func (s RecordService) Get(ctx context.Context, userID int, idRecord string) (mo
 	}, nil
 }
 
-func (s RecordService) Delete(ctx context.Context, userID int, idRecord string) error {
+func (s *RecordService) Delete(ctx context.Context, userID int, idRecord string) error {
 	if err := s.repo.DeleteRecord(ctx, userID, idRecord); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			logger.Log.Debug("no rows dor delete", zap.String("record id", idRecord), zap.Int("user id", userID))
+			logger.Log.Debug("no rows for delete", zap.String("record id", idRecord), zap.Int("user id", userID))
 			return sql.ErrNoRows
 		}
 		logger.Log.Error("", zap.Error(err))
@@ -118,10 +123,10 @@ func (s RecordService) Delete(ctx context.Context, userID int, idRecord string) 
 	return nil
 }
 
-func (s RecordService) Update(ctx context.Context, userID int, idRecord string, input model.RecordUpdateInput) error {
+func (s *RecordService) Update(ctx context.Context, userID int, idRecord string, input model.RecordUpdateInput) error {
 	var record model.Record
 	if input.Metadata == nil && input.Data == nil {
-		return errors.New("nothing to update")
+		return errors.New("nothing to update: both metadata and data are nil")
 	}
 
 	if input.Data != nil {

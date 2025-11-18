@@ -6,16 +6,19 @@ import (
 	"github.com/fatkulllin/gophkeeper/model"
 )
 
+// Service агрегирует все сервисы доменной логики — работу с пользователями и записями.
 type Service struct {
 	User   *UserService
 	Record *RecordService
 }
 
+// Repositories объединяет интерфейсы хранилищ пользователей и записей.
 type Repositories interface {
 	UserRepositories
 	RecordRepository
 }
 
+// UserRepositories определяет методы для работы с пользователями в хранилище.
 type UserRepositories interface {
 	ExistUser(ctx context.Context, user model.UserCredentials) (bool, error)
 	CreateUser(ctx context.Context, user model.UserCredentials) (int, error)
@@ -23,6 +26,7 @@ type UserRepositories interface {
 	GetEncryptedKeyUser(ctx context.Context, userID int) (string, error)
 }
 
+// RecordRepository определяет методы работы с записями пользователя.
 type RecordRepository interface {
 	CreateRecord(ctx context.Context, record model.Record) error
 	DeleteRecord(ctx context.Context, userID int, idRecord string) error
@@ -32,15 +36,18 @@ type RecordRepository interface {
 	UpdateRecord(ctx context.Context, userID int, idRecord string, record model.Record) error
 }
 
+// TokenManager предоставляет методы генерации JWT-токенов.
 type TokenManager interface {
 	Generate(userID int, userLogin string) (string, int, error)
 }
 
+// Password предоставляет функции хеширования и проверки паролей.
 type Password interface {
 	Hash(password string) (string, error)
 	Compare(hash string, password string) (bool, error)
 }
 
+// CryptoUtil предоставляет операции шифрования и расшифровки данных.
 type CryptoUtil interface {
 	EncryptWithMasterKey(src []byte) (string, error)
 	GenerateRandom(size int) ([]byte, error)
@@ -49,6 +56,8 @@ type CryptoUtil interface {
 	Decrypt(encodedCipher string, key []byte) ([]byte, error)
 }
 
+// NewService создаёт контейнер сервисов и связывает бизнес-логику
+// с реализациями репозиториев, менеджером токенов, хешированием паролей и криптографией.
 func NewService(repo Repositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *Service {
 	return &Service{
 		User:   NewUserService(repo, tokenManager, password, cryptoUtil),

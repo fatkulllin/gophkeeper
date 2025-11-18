@@ -1,3 +1,6 @@
+// UserService реализует бизнес-логику регистрации и авторизации пользователей.
+// Он отвечает за хеширование паролей, генерацию и хранение пользовательских ключей,
+// шифрование user-key master-key’ем.
 package service
 
 import (
@@ -10,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// UserService содержит бизнес-логику регистрации и авторизации пользователей.
 type UserService struct {
 	repo         UserRepositories
 	password     Password
@@ -17,10 +21,14 @@ type UserService struct {
 	cryptoUtil   CryptoUtil
 }
 
+// NewUserService создаёт новый сервис для работы с пользователями
 func NewUserService(repo UserRepositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *UserService {
 	return &UserService{repo: repo, tokenManager: tokenManager, password: password, cryptoUtil: cryptoUtil}
 }
 
+// UserRegister выполняет регистрацию нового пользователя.
+// Генерируется user-key (32 байта), который шифруется master-key’ем,
+// пароль хешируется с использованием scrypt, затем создаётся JWT.
 func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentials) (string, int, error) {
 
 	userExists, err := s.repo.ExistUser(ctx, user)
@@ -65,6 +73,8 @@ func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentia
 	return tokenString, tokenExpires, nil
 }
 
+// UserLogin выполняет авторизацию.
+// При wantUserKey = true дополнительно расшифровывает user-key и возвращает его в base64.
 func (s *UserService) UserLogin(ctx context.Context, user model.UserCredentials, wantUserKey bool) (string, int, string, error) {
 	var userKeyBase64 string
 	getUser, err := s.repo.GetUser(ctx, user)
