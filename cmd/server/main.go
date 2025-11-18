@@ -9,7 +9,7 @@ import (
 
 	"github.com/fatkulllin/gophkeeper/internal/server/app"
 	"github.com/fatkulllin/gophkeeper/internal/server/config"
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
 

@@ -11,7 +11,7 @@ import (
 
 	"github.com/fatkulllin/gophkeeper/internal/client/app"
 	"github.com/fatkulllin/gophkeeper/internal/client/filemanager"
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"go.uber.org/zap"

@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"

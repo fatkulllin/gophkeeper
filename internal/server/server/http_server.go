@@ -10,7 +10,7 @@ import (
 	"github.com/fatkulllin/gophkeeper/internal/server/config"
 	"github.com/fatkulllin/gophkeeper/internal/server/handlers"
 	logging "github.com/fatkulllin/gophkeeper/internal/server/middleware/logger"
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	bolt "go.etcd.io/bbolt"
 	berrors "go.etcd.io/bbolt/errors"
 	"go.uber.org/zap"

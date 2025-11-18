@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
 

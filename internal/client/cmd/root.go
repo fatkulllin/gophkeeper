@@ -12,7 +12,7 @@ import (
 	"github.com/fatkulllin/gophkeeper/internal/client/app"
 	"github.com/fatkulllin/gophkeeper/internal/client/cmd/record"
 	usermanager "github.com/fatkulllin/gophkeeper/internal/client/cmd/user"
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

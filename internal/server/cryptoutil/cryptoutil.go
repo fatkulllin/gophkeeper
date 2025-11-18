@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
 

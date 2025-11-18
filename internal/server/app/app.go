@@ -13,8 +13,8 @@ import (
 	"github.com/fatkulllin/gophkeeper/internal/server/repository/postgres"
 	"github.com/fatkulllin/gophkeeper/internal/server/server"
 	"github.com/fatkulllin/gophkeeper/internal/server/service"
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/migrations"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )

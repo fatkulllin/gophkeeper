@@ -5,7 +5,7 @@ package main
 
 import (
 	"github.com/fatkulllin/gophkeeper/internal/client/cmd"
-	"github.com/fatkulllin/gophkeeper/logger"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 )
 
 func main() {

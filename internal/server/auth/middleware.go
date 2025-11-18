@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
-	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )
