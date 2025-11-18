@@ -15,10 +15,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// PGRepo предоставляет методы для работы с таблицами пользователей и записей
+// в базе данных Postgres.
 type PGRepo struct {
 	conn *sql.DB
 }
 
+// NewPGRepo создаёт подключение к базе данных Postgres по переданному DSN.
+// Выполняется проверка соединения через PingContext.
+// Возвращает репозиторий или ошибку при инициализации.
 func NewPGRepo(dsn string) (*PGRepo, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -35,18 +40,22 @@ func NewPGRepo(dsn string) (*PGRepo, error) {
 	return &PGRepo{conn: db}, nil
 }
 
+// Bootstrap применяет миграции goose, используя встроенную файловую систему.
+// Используется при старте приложения.
 func (s *PGRepo) Bootstrap(fs embed.FS) error {
 	goose.SetBaseFS(fs)
 	if err := goose.SetDialect("postgres"); err != nil {
-		return fmt.Errorf("error set dialect postgres %w", err)
+		return fmt.Errorf("failed to set postgres dialect: %w", err)
 	}
 
 	if err := goose.Up(s.conn, "."); err != nil {
-		return fmt.Errorf("error run migrate %w", err)
+		return fmt.Errorf("failed to apply migrations: %w", err)
 	}
 	return nil
 }
 
+// ExistUser проверяет наличие пользователя по логину.
+// Возвращает true, если пользователь существует.
 func (s *PGRepo) ExistUser(ctx context.Context, user model.UserCredentials) (bool, error) {
 	row := s.conn.QueryRowContext(ctx, "SELECT login FROM users WHERE login = $1", user.Username)
 	var userScan string
@@ -60,6 +69,7 @@ func (s *PGRepo) ExistUser(ctx context.Context, user model.UserCredentials) (boo
 	return true, nil
 }
 
+// CreateUser создаёт нового пользователя и возвращает его ID.
 func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (int, error) {
 
 	var id int
@@ -75,6 +85,7 @@ func (s *PGRepo) CreateUser(ctx context.Context, user model.UserCredentials) (in
 	return id, nil
 }
 
+// GetUser возвращает пользователя по логину.
 func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model.User, error) {
 	var foundUser model.User
 	row := s.conn.QueryRowContext(ctx, "SELECT id, login, password_hash FROM users WHERE login = $1", user.Username)
@@ -89,6 +100,7 @@ func (s *PGRepo) GetUser(ctx context.Context, user model.UserCredentials) (model
 	return foundUser, nil
 }
 
+// GetEncryptedKeyUser возвращает зашифрованный ключ пользователя.
 func (s *PGRepo) GetEncryptedKeyUser(ctx context.Context, userID int) (string, error) {
 	var encryptedKey string
 	row := s.conn.QueryRowContext(ctx, "SELECT encrypted_key FROM users WHERE id = $1;", userID)
@@ -102,17 +114,19 @@ func (s *PGRepo) GetEncryptedKeyUser(ctx context.Context, userID int) (string, e
 	return encryptedKey, nil
 }
 
+// CreateRecord добавляет новую запись пользователя.
 func (s *PGRepo) CreateRecord(ctx context.Context, record model.Record) error {
 
 	_, err := s.conn.ExecContext(ctx, "INSERT INTO records (user_id, type, metadata, data) VALUES ($1, $2, $3, $4)", record.UserID, record.Type, record.Metadata, record.Data)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert record: %w", err)
 	}
 
 	return nil
 }
 
+// GetAllRecords возвращает все записи пользователя.
 func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record, error) {
 	records := make([]model.Record, 0)
 	rows, err := s.conn.QueryContext(ctx, `
@@ -139,10 +153,11 @@ func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record,
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(records)
+	logger.Log.Debug("records fetched", zap.Int("count", len(records)))
 	return records, nil
 }
 
+// DeleteRecord удаляет запись по ID.
 func (s *PGRepo) DeleteRecord(ctx context.Context, userID int, idRecord string) error {
 	result, err := s.conn.ExecContext(ctx, "DELETE FROM records WHERE id = $1 AND user_id = $2 ", idRecord, userID)
 
@@ -151,18 +166,18 @@ func (s *PGRepo) DeleteRecord(ctx context.Context, userID int, idRecord string) 
 	}
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		return sql.ErrNoRows
+		return fmt.Errorf("record not found: id=%s", idRecord)
 	}
 	return nil
 }
 
+// GetRecord возвращает запись по её ID.
 func (s *PGRepo) GetRecord(ctx context.Context, userID int, idRecord string) (model.Record, error) {
 	var record model.Record
 	row := s.conn.QueryRowContext(ctx, `
 		SELECT id, type, metadata, data
 		FROM records
 		WHERE user_id = $1 AND id = $2
-		ORDER BY created_at DESC
 		`, userID, idRecord)
 	err := row.Scan(&record.ID, &record.Type, &record.Metadata, &record.Data)
 	if err != nil {
@@ -175,6 +190,7 @@ func (s *PGRepo) GetRecord(ctx context.Context, userID int, idRecord string) (mo
 	return record, nil
 }
 
+// UpdateRecord обновляет метаданные и/или данные записи.
 func (s *PGRepo) UpdateRecord(ctx context.Context, userID int, idRecord string, record model.Record) error {
 
 	if record.Metadata == "" && record.Data == nil {
@@ -206,7 +222,12 @@ func (s *PGRepo) UpdateRecord(ctx context.Context, userID int, idRecord string, 
 
 	_, err := s.conn.ExecContext(ctx, query, args...)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update record: %w", err)
 	}
 	return nil
+}
+
+// Close закрывает соединение с базой данных.
+func (s *PGRepo) Close() error {
+	return s.conn.Close()
 }
