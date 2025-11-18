@@ -21,23 +21,27 @@ const (
 
 var errInvalidPasswordHash = errors.New("password hash does not have the correct format")
 
+// Password обеспечивает создание и проверку хешей паролей с использованием алгоритма scrypt.
 type Password struct{}
 
+// NewPassword создаёт новый объект для работы с хешированием паролей.
 func NewPassword() *Password {
 	return &Password{}
 }
 
+// Hash генерирует случайную соль и создаёт scrypt-хеш для указанного пароля.
+// Формат результата: "scrypt$N$r$p$base64(salt)$base64(hash)".
 func (pass *Password) Hash(password string) (string, error) {
 	// Generate salt
 	salt := make([]byte, SaltByteSize)
 	if _, err := rand.Read(salt); err != nil {
-		return "", fmt.Errorf("generating password salt: %w", err)
+		return "", fmt.Errorf("failed to generate salt: %w", err)
 	}
 
 	// Generate password hash
 	passwordHash, err := scrypt.Key([]byte(password), salt, HashIterations, HashBlockSize, HashParallelism, HashKeySize)
 	if err != nil {
-		return "", fmt.Errorf("generating password salt: %w", err)
+		return "", fmt.Errorf("failed to generate password hash: %w", err)
 	}
 
 	// Concatenate algorithm settings and hash with $ (this is a common format for scrypt hashes)
@@ -47,7 +51,7 @@ func (pass *Password) Hash(password string) (string, error) {
 	return fmt.Sprintf("scrypt$%d$%d$%d$%s$%s", HashIterations, HashBlockSize, HashParallelism, base64Salt, base64Password), nil
 }
 
-// Compare compares a given password to an existing scrypt password hash
+// Compare проверяет соответствие пароля уже существующему scrypt-хешу.
 func (pass *Password) Compare(hash string, password string) (bool, error) {
 	var n, r, p int
 	var alg, originalHash, salt string
@@ -58,17 +62,17 @@ func (pass *Password) Compare(hash string, password string) (bool, error) {
 
 	hashBytes, err := base64.StdEncoding.DecodeString(originalHash)
 	if err != nil {
-		return false, fmt.Errorf("decoding password hash: %w", err)
+		return false, fmt.Errorf("invalid base64 hash: %w", err)
 	}
 
 	saltBytes, err := base64.StdEncoding.DecodeString(salt)
 	if err != nil {
-		return false, fmt.Errorf("decoding salt: %w", err)
+		return false, fmt.Errorf("invalid base64 salt: %w", err)
 	}
 
 	passwordHash, err := scrypt.Key([]byte(password), saltBytes, n, r, p, len(hashBytes))
 	if err != nil {
-		return false, fmt.Errorf("generating password salt: %w", err)
+		return false, fmt.Errorf("failed to generate hash for comparison: %w", err)
 	}
 
 	return bytes.Equal(hashBytes, passwordHash), nil
