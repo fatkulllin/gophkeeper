@@ -20,6 +20,7 @@ type UserRepositories interface {
 	ExistUser(ctx context.Context, user model.UserCredentials) (bool, error)
 	CreateUser(ctx context.Context, user model.UserCredentials) (int, error)
 	GetUser(ctx context.Context, user model.UserCredentials) (model.User, error)
+	GetEncryptedKeyUser(ctx context.Context, userID int) (string, error)
 }
 
 type RecordRepository interface {

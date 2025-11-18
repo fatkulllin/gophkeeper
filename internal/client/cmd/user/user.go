@@ -11,9 +11,6 @@ func NewCmdUser() *cobra.Command {
 		Short: "Manager user",
 	}
 
-	// cmds.AddCommand(NewCmdCanI(f, streams))
-	// cmds.AddCommand(NewCmdReconcile(f, streams))
-	// cmds.AddCommand(NewCmdWhoAmI(f, streams))
 	cmds.AddCommand(NewCmdLogin())
 	cmds.AddCommand(NewCmdRegister())
 

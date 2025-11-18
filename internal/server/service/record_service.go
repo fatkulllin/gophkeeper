@@ -91,7 +91,6 @@ func (s RecordService) Get(ctx context.Context, userID int, idRecord string) (mo
 		logger.Log.Error("", zap.Error(err))
 		return model.RecordResponse{}, err
 	}
-	fmt.Println(string(record.Data))
 
 	decryptData, err := s.cryptoUtil.Decrypt(string(record.Data), decryptUserKey)
 	if err != nil {

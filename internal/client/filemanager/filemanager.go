@@ -42,3 +42,15 @@ func (f *FileManager) LoadFile(filename string) (string, error) {
 	}
 	return string(data), nil
 }
+func (f *FileManager) RemoveFile(filename string) error {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, "gophkeeper", filename)
+	err = os.Remove(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}

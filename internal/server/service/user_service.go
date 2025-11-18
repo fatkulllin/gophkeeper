@@ -2,9 +2,12 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
+	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"go.uber.org/zap"
 )
 
 type UserService struct {
@@ -62,26 +65,39 @@ func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentia
 	return tokenString, tokenExpires, nil
 }
 
-func (s *UserService) UserLogin(ctx context.Context, user model.UserCredentials) (string, int, error) {
+func (s *UserService) UserLogin(ctx context.Context, user model.UserCredentials, wantUserKey bool) (string, int, string, error) {
+	var userKeyBase64 string
 	getUser, err := s.repo.GetUser(ctx, user)
-
+	if wantUserKey {
+		encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, getUser.ID)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return "", 0, "", err
+		}
+		decryptUserKey, err := s.cryptoUtil.DecryptWithMasterKey(encryptedKey)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return "", 0, "", err
+		}
+		userKeyBase64 = base64.StdEncoding.EncodeToString(decryptUserKey)
+	}
 	if err != nil {
-		return "", 0, err
+		return "", 0, "", err
 	}
 	resultPassword, err := s.password.Compare(getUser.PasswordHash, user.Password)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, "", err
 	}
 
 	if !resultPassword {
-		return "", 0, model.ErrIncorrectPassword
+		return "", 0, "", model.ErrIncorrectPassword
 	}
 
 	tokenString, tokenExpires, err := s.tokenManager.Generate(getUser.ID, getUser.Login)
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, "", err
 	}
-	return tokenString, tokenExpires, nil
+	return tokenString, tokenExpires, userKeyBase64, nil
 }

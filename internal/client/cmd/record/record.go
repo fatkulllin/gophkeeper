@@ -12,5 +12,6 @@ func NewCmdRecord() *cobra.Command {
 	cmds.AddCommand(NewCmdGet())
 	cmds.AddCommand(NewCmdDelete())
 	cmds.AddCommand(NewCmdUpdate())
+	cmds.AddCommand(NewCmdSync())
 	return cmds
 }

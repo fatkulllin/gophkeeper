@@ -6,24 +6,14 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-
-	"github.com/fatkulllin/gophkeeper/logger"
-	"go.uber.org/zap"
 )
 
 type CryptoUtil struct {
 	MasterKey []byte
 }
 
-func NewCryptoUtil(masterKey string) *CryptoUtil {
-	key, err := base64.StdEncoding.DecodeString(masterKey)
-	if err != nil {
-		logger.Log.Fatal("invalid master key", zap.Error(err))
-	}
-	if len(masterKey) != 32 {
-		logger.Log.Fatal("master key must be 32 bytes for AES-256", zap.Int("current", len(masterKey)))
-	}
-	return &CryptoUtil{MasterKey: key}
+func NewCryptoUtil() *CryptoUtil {
+	return &CryptoUtil{}
 }
 
 func (c *CryptoUtil) GenerateRandom(size int) ([]byte, error) {
@@ -58,20 +48,8 @@ func (c *CryptoUtil) EncryptString(src, key []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (c *CryptoUtil) EncryptWithMasterKey(src []byte) (string, error) {
-	return c.EncryptString(src, c.MasterKey)
-}
-
-func (c *CryptoUtil) DecryptWithMasterKey(src string) ([]byte, error) {
-	res, err := c.Decrypt(src, c.MasterKey)
-	if err != nil {
-		return []byte{}, fmt.Errorf("decrypt: %w", err)
-	}
-	return res, nil
-}
-
 func (c *CryptoUtil) Decrypt(encodedCipher string, key []byte) ([]byte, error) {
-	fmt.Println(encodedCipher, "server")
+	fmt.Println(encodedCipher, "aaaaa")
 	cipherData, err := base64.StdEncoding.DecodeString(encodedCipher)
 	if err != nil {
 		return nil, fmt.Errorf("decode base64: %w", err)

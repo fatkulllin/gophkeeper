@@ -43,6 +43,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
 	rootCmd.AddCommand(usermanager.NewCmdUser())
 	rootCmd.AddCommand(record.NewCmdRecord())
+	rootCmd.AddCommand(NewCmdLogout())
 	return rootCmd
 }
 

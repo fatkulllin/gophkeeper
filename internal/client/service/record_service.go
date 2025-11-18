@@ -8,18 +8,24 @@ import (
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
+	"github.com/fatkulllin/gophkeeper/logger"
 	"github.com/fatkulllin/gophkeeper/model"
+	"go.uber.org/zap"
 )
 
 type RecordService struct {
 	apiClient   ApiClient
 	fileManager FileManager
+	boltDB      Repository
+	cryptoUtil  CryptoUtil
 }
 
-func NewRecordService(apiClient ApiClient, fileManager FileManager) *RecordService {
+func NewRecordService(apiClient ApiClient, fileManager FileManager, boltDB Repository, cryptoUtil CryptoUtil) *RecordService {
 	return &RecordService{
 		apiClient:   apiClient,
 		fileManager: fileManager,
+		boltDB:      boltDB,
+		cryptoUtil:  cryptoUtil,
 	}
 }
 
@@ -82,6 +88,36 @@ func (s *RecordService) Get(ctx context.Context, url string) (*models.Response, 
 	return resp, nil
 }
 
+func (s *RecordService) GetLocal(ctx context.Context, id int64) (model.RecordResponse, error) {
+	record, err := s.boltDB.Get(id)
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return model.RecordResponse{}, err
+	}
+
+	userKey, err := s.boltDB.GetUserKey()
+
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return model.RecordResponse{}, err
+	}
+
+	decryptData, err := s.cryptoUtil.Decrypt(string(record.Data), userKey)
+
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return model.RecordResponse{}, err
+	}
+
+	return model.RecordResponse{
+		ID:       record.ID,
+		Type:     record.Type,
+		Metadata: record.Metadata,
+		Data:     decryptData,
+	}, nil
+
+}
+
 func (s *RecordService) Delete(ctx context.Context, url string) (*models.Response, error) {
 
 	token, err := s.fileManager.LoadFile("token")
@@ -141,4 +177,48 @@ func (s *RecordService) Update(ctx context.Context, url string, input model.Reco
 	}
 
 	return resp, nil
+}
+
+func (s *RecordService) SaveRecords(records []model.Record) error {
+	if err := s.boltDB.SaveRecords(records); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *RecordService) GetAll() ([]model.RecordResponse, error) {
+
+	recordsOutput := make([]model.RecordResponse, 0)
+
+	records, err := s.boltDB.All()
+
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return nil, err
+	}
+
+	userKey, err := s.boltDB.GetUserKey()
+
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+		return nil, err
+	}
+
+	for _, rec := range records {
+		decryptData, err := s.cryptoUtil.Decrypt(string(rec.Data), userKey)
+		if err != nil {
+			logger.Log.Error("", zap.Error(err))
+			return nil, err
+		}
+		record := model.RecordResponse{
+			ID:       rec.ID,
+			Type:     rec.Type,
+			Metadata: rec.Metadata,
+			Data:     decryptData,
+		}
+
+		recordsOutput = append(recordsOutput, record)
+	}
+
+	return recordsOutput, nil
 }

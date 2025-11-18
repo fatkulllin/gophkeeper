@@ -13,12 +13,14 @@ import (
 type UserService struct {
 	apiClient   ApiClient
 	fileManager FileManager
+	boltDB      Repository
 }
 
-func NewUserService(apiClient ApiClient, fileManager FileManager) *UserService {
+func NewUserService(apiClient ApiClient, fileManager FileManager, boltDB Repository) *UserService {
 	return &UserService{
 		apiClient:   apiClient,
 		fileManager: fileManager,
+		boltDB:      boltDB,
 	}
 }
 
@@ -78,4 +80,29 @@ func (s *UserService) RegisterUser(ctx context.Context, username, password, url 
 	}
 
 	return resp, nil
+}
+
+func (s *UserService) SaveUserKey(userKey string) error {
+	fmt.Println(userKey)
+	err := s.boltDB.PutUserKey(userKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) ClearDB() error {
+	err := s.boltDB.Clear()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserService) ClearToken(filename string) error {
+	err := s.fileManager.RemoveFile(filename)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
+	"github.com/fatkulllin/gophkeeper/model"
 )
 
 type Service struct {
@@ -19,11 +20,25 @@ type ApiClient interface {
 type FileManager interface {
 	SaveFile(filename string, body string, permission os.FileMode) error
 	LoadFile(filename string) (string, error)
+	RemoveFile(filename string) error
 }
 
-func NewService(apiClient ApiClient, fileManager FileManager) *Service {
+type Repository interface {
+	PutUserKey(userKey string) error
+	GetUserKey() ([]byte, error)
+	SaveRecords(records []model.Record) error
+	Clear() error
+	All() ([]model.Record, error)
+	Get(id int64) (model.Record, error)
+}
+
+type CryptoUtil interface {
+	Decrypt(encodedCipher string, key []byte) ([]byte, error)
+}
+
+func NewService(apiClient ApiClient, fileManager FileManager, boltDB Repository, cryptoUtil CryptoUtil) *Service {
 	return &Service{
-		User:   NewUserService(apiClient, fileManager),
-		Record: NewRecordService(apiClient, fileManager),
+		User:   NewUserService(apiClient, fileManager, boltDB),
+		Record: NewRecordService(apiClient, fileManager, boltDB, cryptoUtil),
 	}
 }

@@ -70,3 +70,7 @@ type RecordUpdateInput struct {
 	Metadata *string          `json:"metadata,omitempty"`
 	Data     *json.RawMessage `json:"data,omitempty"`
 }
+
+type UserKeyRespone struct {
+	UserKey string `json:"userkey"`
+}

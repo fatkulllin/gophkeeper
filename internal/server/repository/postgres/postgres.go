@@ -116,7 +116,7 @@ func (s *PGRepo) CreateRecord(ctx context.Context, record model.Record) error {
 func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record, error) {
 	records := make([]model.Record, 0)
 	rows, err := s.conn.QueryContext(ctx, `
-		SELECT id, user_id, type, metadata
+		SELECT id, user_id, type, metadata, data
 		FROM records
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -128,7 +128,7 @@ func (s *PGRepo) GetAllRecords(ctx context.Context, userID int) ([]model.Record,
 	defer rows.Close()
 	for rows.Next() {
 		var r model.Record
-		err = rows.Scan(&r.ID, &r.UserID, &r.Type, &r.Metadata)
+		err = rows.Scan(&r.ID, &r.UserID, &r.Type, &r.Metadata, &r.Data)
 		if err != nil {
 			return nil, err
 		}
