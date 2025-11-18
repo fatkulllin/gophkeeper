@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/ctxkeys"
@@ -11,13 +12,17 @@ import (
 	"go.uber.org/zap"
 )
 
+// AuthMiddleware проверяет JWT-токен из cookie "auth_token".
+// При успешной аутентификации помещает данные пользователя (claims) в контекст
+// и передает управление следующему обработчику. В случае ошибки возвращает
+// статус 401 Unauthorized.
 func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			cookie, err := req.Cookie("auth_token")
 
 			if err != nil {
-				http.Error(res, "Unauthorized: missing auth token", http.StatusUnauthorized)
+				http.Error(res, "unauthorized: missing auth token", http.StatusUnauthorized)
 				return
 			}
 
@@ -27,22 +32,28 @@ func AuthMiddleware(secret string) func(http.Handler) http.Handler {
 
 			token, err := jwt.ParseWithClaims(tokenString, &claims,
 				func(t *jwt.Token) (any, error) {
+					if t.Method != jwt.SigningMethodHS256 {
+						return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+					}
 					return []byte(secret), nil
 				})
 
 			if err != nil {
-				logger.Log.Error("invalid jwt", zap.Error(err))
-				http.Error(res, "unauthorized", http.StatusUnauthorized)
+				logger.Log.Error("JWT validation failed", zap.Error(err))
+				http.Error(res, "unauthorized: invalid token", http.StatusUnauthorized)
 				return
 			}
 
 			if !token.Valid {
-				http.Error(res, "token is not valid", http.StatusUnauthorized)
+				http.Error(res, "unauthorized: token is not valid", http.StatusUnauthorized)
 				return
 			}
-			logger.Log.Debug("token is valid", zap.String("login", claims.UserLogin))
-			// // Можно получить пользовательские данные из token.Claims и положить в контекст
+
+			logger.Log.Debug("JWT token validated", zap.String("login", claims.UserLogin))
+
+			// Передаем claims в контекст запроса
 			ctx := context.WithValue(req.Context(), ctxkeys.UserContextKey, claims)
+
 			next.ServeHTTP(res, req.WithContext(ctx))
 		})
 	}
