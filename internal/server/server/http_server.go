@@ -1,3 +1,5 @@
+// Package server содержит реализацию HTTP-сервера GophKeeper,
+// включая настройку маршрутов, middleware и логику корректного завершения работы.
 package server
 
 import (
@@ -48,8 +50,9 @@ func NewRouter(jwtSecret string, healthHandler *handlers.HealthHandler, loggerHa
 	return r
 }
 
-func NewServer(cfg config.Config, debugHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler, recordHandler *handlers.RecordHandler) *Server {
-	router := NewRouter(cfg.JWTSecret, debugHandler, loggerHandler, authHandler, recordHandler)
+// NewServer создаёт HTTP-сервер с заданной конфигурацией и зарегистрированными хендлерами.
+func NewServer(cfg config.Config, healthHandler *handlers.HealthHandler, loggerHandler *handlers.LoggerHandler, authHandler *handlers.AuthHandler, recordHandler *handlers.RecordHandler) *Server {
+	router := NewRouter(cfg.JWTSecret, healthHandler, loggerHandler, authHandler, recordHandler)
 	return &Server{
 		config: cfg,
 		httpServer: &http.Server{
@@ -62,12 +65,14 @@ func NewServer(cfg config.Config, debugHandler *handlers.HealthHandler, loggerHa
 	}
 }
 
+// Start запускает HTTP-сервер и останавливает его при отмене контекста.
+// Выполняет корректное завершение через http.Server.Shutdown.
 func (server *Server) Start(ctx context.Context) error {
 
 	go func() {
 		<-ctx.Done()
 
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 
 		defer cancel()
 

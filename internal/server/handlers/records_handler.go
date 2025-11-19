@@ -1,3 +1,16 @@
+// RecordHandler обрабатывает CRUD-операции с пользовательскими записями.
+//
+// Поддерживаемые эндпоинты:
+//
+//   - POST   /api/record        — создание записи
+//   - GET    /api/records       — получение списка записей
+//   - GET    /api/records/{id}  — получение записи по ID
+//   - DELETE /api/records/{id}  — удаление записи
+//   - PATCH  /api/records/{id}  — обновление записи
+//
+// Хендлеры извлекают идентификатор пользователя из JWT (через контекст),
+// проводят базовую проверку входных данных и вызывают доменный сервис.
+// Бизнес-логика и работа с хранилищем находятся в слое service.
 package handlers
 
 import (
@@ -15,15 +28,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// POST /api/records — добавить новую запись;
-
-// GET /api/records — получить список;
-
-// GET /api/records/{id} — получить запись;
-
-// DELETE /api/records/{id} — удалить.
-
-// PATCH /api/records/{id} — обновить.
+// RecordService определяет интерфейс бизнес-логики для операций над
+// пользовательскими записями.
 type RecordService interface {
 	Create(ctx context.Context, userID int, input model.RecordInput) error
 	GetAll(ctx context.Context, userID int) ([]model.Record, error)
@@ -31,15 +37,23 @@ type RecordService interface {
 	Delete(ctx context.Context, userID int, idRecord string) error
 	Update(ctx context.Context, userID int, idRecord string, record model.RecordUpdateInput) error
 }
+
+// RecordHandler обрабатывает HTTP-запросы, связанные с пользовательскими записями.
+// Он преобразует входные данные, достаёт идентификатор пользователя из контекста
+// и вызывает соответствующие методы RecordService.
 type RecordHandler struct {
 	service  RecordService
 	validate *validator.Validate
 }
 
-func NewRecordHandler(service RecordService) *RecordHandler {
-	return &RecordHandler{service: service, validate: validator.New()}
+// NewRecordHandler создаёт новый RecordHandler.
+func NewRecordHandler(service RecordService, validate *validator.Validate) *RecordHandler {
+	return &RecordHandler{service: service, validate: validate}
 }
 
+// CreateRecord обрабатывает создание записи.
+//
+// POST /api/record
 func (h *RecordHandler) CreateRecord(res http.ResponseWriter, req *http.Request) {
 	var record model.RecordInput
 
@@ -56,17 +70,15 @@ func (h *RecordHandler) CreateRecord(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	// if err := h.validate.Struct(record); err != nil {
-	// 	http.Error(res, "Validation failed: "+err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
 	if err := h.service.Create(req.Context(), claims.UserID, record); err != nil {
 		http.Error(res, "error", http.StatusInternalServerError)
 		return
 	}
 }
 
+// ListRecords возвращает список всех записей пользователя.
+//
+// GET /api/records
 func (h *RecordHandler) ListRecords(res http.ResponseWriter, req *http.Request) {
 	claims, ok := req.Context().Value(ctxkeys.UserContextKey).(model.Claims)
 
@@ -89,6 +101,9 @@ func (h *RecordHandler) ListRecords(res http.ResponseWriter, req *http.Request) 
 	}
 }
 
+// GetRecord возвращает запись по ID.
+//
+// GET /api/records/{id}
 func (h *RecordHandler) GetRecord(res http.ResponseWriter, req *http.Request) {
 	idRecord := chi.URLParam(req, "id")
 	claims, ok := req.Context().Value(ctxkeys.UserContextKey).(model.Claims)
@@ -111,6 +126,9 @@ func (h *RecordHandler) GetRecord(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// Delete удаляет запись по ID.
+//
+// DELETE /api/records/{id}
 func (h *RecordHandler) Delete(res http.ResponseWriter, req *http.Request) {
 	idRecord := chi.URLParam(req, "id")
 	claims, ok := req.Context().Value(ctxkeys.UserContextKey).(model.Claims)
@@ -137,6 +155,10 @@ func (h *RecordHandler) Delete(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
+// Update обновляет запись. Разрешено обновлять только те поля,
+// которые явно указаны в JSON (metadata, data).
+//
+// PATCH /api/records/{id}
 func (h *RecordHandler) Update(res http.ResponseWriter, req *http.Request) {
 	var record model.RecordUpdateInput
 	idRecord := chi.URLParam(req, "id")

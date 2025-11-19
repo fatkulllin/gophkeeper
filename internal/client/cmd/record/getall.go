@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func NewCmdGetAll() *cobra.Command {
+func NewCmdGetAll(svc *service.Service) *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "getall",
 		Short: "Get all records",
@@ -21,7 +21,7 @@ func NewCmdGetAll() *cobra.Command {
 
 			if remote {
 				url := viper.GetString("server") + "/api/records"
-				resp, err := app.CliService.Record.Get(cmd.Context(), url)
+				resp, err := svc.Record.Get(cmd.Context(), url)
 
 				if err != nil {
 					return fmt.Errorf("internal error: %w", err)
@@ -49,7 +49,7 @@ func NewCmdGetAll() *cobra.Command {
 				}
 				return nil
 			}
-			records, err := app.CliService.Record.GetAll()
+			records, err := svc.Record.GetAll()
 			if err != nil {
 				logger.Log.Error("", zap.Error(err))
 				return fmt.Errorf("internal error: %v", err.Error())

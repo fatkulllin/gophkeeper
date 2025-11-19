@@ -6,24 +6,16 @@ import (
 )
 
 type FileManager struct {
+	cfgDir string
 }
 
-func NewFileManager() *FileManager {
-	return &FileManager{}
+func NewFileManager(cfgDir string) *FileManager {
+	return &FileManager{cfgDir: cfgDir}
 }
 
 func (f *FileManager) SaveFile(filename string, body string, permission os.FileMode) error {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(dir, "gophkeeper")
-	err = os.MkdirAll(path, 0700)
-	if err != nil {
-		return err
-	}
-	filePath := filepath.Join(path, filename)
-	err = os.WriteFile(filePath, []byte(body), permission)
+	filePath := filepath.Join(f.cfgDir, filename)
+	err := os.WriteFile(filePath, []byte(body), permission)
 	if err != nil {
 		return err
 	}
@@ -31,11 +23,7 @@ func (f *FileManager) SaveFile(filename string, body string, permission os.FileM
 }
 
 func (f *FileManager) LoadFile(filename string) (string, error) {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
-	}
-	path := filepath.Join(dir, "gophkeeper", filename)
+	path := filepath.Join(f.cfgDir, filename)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -43,12 +31,8 @@ func (f *FileManager) LoadFile(filename string) (string, error) {
 	return string(data), nil
 }
 func (f *FileManager) RemoveFile(filename string) error {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(dir, "gophkeeper", filename)
-	err = os.Remove(path)
+	path := filepath.Join(f.cfgDir, filename)
+	err := os.Remove(path)
 	if err != nil {
 		return err
 	}

@@ -12,13 +12,14 @@ import (
 	"github.com/fatkulllin/gophkeeper/internal/client/app"
 	"github.com/fatkulllin/gophkeeper/internal/client/cmd/record"
 	usermanager "github.com/fatkulllin/gophkeeper/internal/client/cmd/user"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 func NewRootCmd() *cobra.Command {
+	var svc *service.Service
 
 	rootCmd := &cobra.Command{
 		Use:   "gophkeeper",
@@ -32,18 +33,20 @@ func NewRootCmd() *cobra.Command {
 			if err = initializeLogger(); err != nil {
 				return err
 			}
-			configPath, _ := os.UserConfigDir()
-			logger.Log.Debug("config dir", zap.String("dir", configPath))
-			app.InitApp()
+
+			svc, err = app.InitApp()
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}
 	rootCmd.PersistentFlags().String("log-level", "info", "logging level (debug, info, warn, error)")
 	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
 	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
-	rootCmd.AddCommand(usermanager.NewCmdUser())
-	rootCmd.AddCommand(record.NewCmdRecord())
-	rootCmd.AddCommand(NewCmdLogout())
+	rootCmd.AddCommand(usermanager.NewCmdUser(svc))
+	rootCmd.AddCommand(record.NewCmdRecord(svc))
+	rootCmd.AddCommand(NewCmdLogout(svc))
 	return rootCmd
 }
 

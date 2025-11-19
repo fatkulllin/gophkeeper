@@ -22,8 +22,8 @@ type AuthHandler struct {
 	validate *validator.Validate
 }
 
-func NewAuthHandler(service AuthService) *AuthHandler {
-	return &AuthHandler{service: service, validate: validator.New()}
+func NewAuthHandler(service AuthService, validate *validator.Validate) *AuthHandler {
+	return &AuthHandler{service: service, validate: validate}
 }
 
 func writeAuthSuccessResponse(res http.ResponseWriter, token string, expires int, userKey string) {
@@ -80,7 +80,7 @@ func (h *AuthHandler) UserRegister(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 		logger.Log.Error("save user", zap.String("login", user.Username), zap.Error(err))
-		http.Error(res, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	writeAuthSuccessResponse(res, tokenString, tokenExpires, "")

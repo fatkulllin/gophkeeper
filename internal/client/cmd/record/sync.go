@@ -4,20 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func NewCmdSync() *cobra.Command {
+func NewCmdSync(svc *service.Service) *cobra.Command {
 	addCmd := &cobra.Command{
 		Use:   "sync",
 		Short: "sync all records",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			url := viper.GetString("server") + "/api/records"
-			resp, err := app.CliService.Record.Get(cmd.Context(), url)
+			resp, err := svc.Record.Get(cmd.Context(), url)
 
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())
@@ -33,7 +33,7 @@ func NewCmdSync() *cobra.Command {
 			if err := json.Unmarshal(resp.Body, &records); err != nil {
 				return fmt.Errorf("failed to parse JSON: %w", err)
 			}
-			if err := app.CliService.Record.SaveRecords(records); err != nil {
+			if err := svc.Record.SaveRecords(records); err != nil {
 				return fmt.Errorf("failed to save records to bolt: %w", err)
 			}
 			return nil

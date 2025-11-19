@@ -6,17 +6,14 @@ package usermanager
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
-	"github.com/fatkulllin/gophkeeper/internal/client/filemanager"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func NewCmdRegister() *cobra.Command {
+func NewCmdRegister(svc *service.Service) *cobra.Command {
 
 	// registerCmd represents the register command
 	var registerCmd = &cobra.Command{
@@ -38,7 +35,7 @@ Upon successful registration, you will be automatically logged in.`,
 				return fmt.Errorf("username and password are required")
 			}
 
-			resp, err := app.CliService.User.LoginUser(ctx, username, password, url)
+			resp, err := svc.User.LoginUser(ctx, username, password, url)
 
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())
@@ -61,13 +58,8 @@ Upon successful registration, you will be automatically logged in.`,
 					break
 				}
 			}
-			permission, err := strconv.ParseUint("0600", 8, 32)
 
-			if err != nil {
-				return err
-			}
-
-			filemanager.NewFileManager().SaveFile("token", auth_token, os.FileMode(permission))
+			svc.User.SaveToken("token", auth_token)
 			return nil
 		},
 	}

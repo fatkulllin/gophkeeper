@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
 )
@@ -105,4 +107,14 @@ func (s *UserService) ClearToken(filename string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *UserService) SaveToken(filename string, body string) error {
+	permission, err := strconv.ParseUint("0600", 8, 32)
+
+	if err != nil {
+		return err
+	}
+
+	return s.fileManager.SaveFile(filename, body, os.FileMode(permission))
 }

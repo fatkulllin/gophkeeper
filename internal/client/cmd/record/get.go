@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func NewCmdGet() *cobra.Command {
+func NewCmdGet(svc *service.Service) *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get record",
@@ -21,7 +21,7 @@ func NewCmdGet() *cobra.Command {
 
 			if remote {
 				url := viper.GetString("server") + "/api/records/" + viper.GetString("id")
-				resp, err := app.CliService.Record.Get(cmd.Context(), url)
+				resp, err := svc.Record.Get(cmd.Context(), url)
 
 				if err != nil {
 					return fmt.Errorf("internal error: %v", err.Error())
@@ -52,7 +52,7 @@ func NewCmdGet() *cobra.Command {
 				return nil
 			}
 			id := viper.GetInt64("id")
-			record, err := app.CliService.Record.GetLocal(cmd.Context(), id)
+			record, err := svc.Record.GetLocal(cmd.Context(), id)
 
 			if err != nil {
 				logger.Log.Error("", zap.Error(err))

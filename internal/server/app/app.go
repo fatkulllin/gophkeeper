@@ -2,19 +2,22 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 
 	"github.com/fatkulllin/gophkeeper/internal/server/auth"
 	"github.com/fatkulllin/gophkeeper/internal/server/config"
 	"github.com/fatkulllin/gophkeeper/internal/server/cryptoutil"
+	"github.com/fatkulllin/gophkeeper/internal/server/db"
 	"github.com/fatkulllin/gophkeeper/internal/server/handlers"
 	"github.com/fatkulllin/gophkeeper/internal/server/password"
-	"github.com/fatkulllin/gophkeeper/internal/server/repository/postgres"
+	"github.com/fatkulllin/gophkeeper/internal/server/repositories/postgres"
 	"github.com/fatkulllin/gophkeeper/internal/server/server"
 	"github.com/fatkulllin/gophkeeper/internal/server/service"
 	"github.com/fatkulllin/gophkeeper/migrations"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -23,7 +26,7 @@ import (
 // управляет запуском HTTP и gRPC серверов.
 type App struct {
 	server *server.Server
-	pgRepo *postgres.PGRepo
+	pgConn *sql.DB
 }
 
 // NewApp создаёт и настраивает серверное приложение GophKeeper.
@@ -32,23 +35,24 @@ type App struct {
 //
 // Возвращает экземпляр App или ошибку инициализации.
 func NewApp(cfg config.Config) (App, error) {
-
-	pgRepo, err := postgres.NewPGRepo(cfg.DatabaseURI)
+	pgConn, err := db.NewPostgres(cfg.DatabaseURI)
 
 	if err != nil {
-		return App{}, fmt.Errorf("connect to Database is unavailable: %w", err)
+		return App{}, fmt.Errorf("failed to connect to database %w", err)
 	}
 
 	logger.Log.Debug("successfully connected to database")
 
-	err = pgRepo.Bootstrap(migrations.FS)
-
+	err = db.Bootstrap(pgConn, migrations.FS)
 	if err != nil {
-		return App{}, fmt.Errorf("migrate is not run: %w", err)
+		return App{}, fmt.Errorf("failed to apply migrations %w", err)
 	}
-
 	logger.Log.Debug("database migrated successfully")
 
+	recordRepo := postgres.NewRecordRepo(pgConn)
+	userRepo := postgres.NewUserRepo(pgConn)
+
+	v := validator.New()
 	tokenManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTExpires)
 
 	logger.Log.Debug("init jwt manager successfully")
@@ -56,16 +60,16 @@ func NewApp(cfg config.Config) (App, error) {
 	pwdHasher := password.NewPassword()
 	cryptoUtil := cryptoutil.NewCryptoUtil(cfg.MasterKey)
 
-	service := service.NewService(pgRepo, tokenManager, pwdHasher, cryptoUtil)
+	service := service.NewService(userRepo, recordRepo, tokenManager, pwdHasher, cryptoUtil)
 	healthHandler := handlers.NewHealthHandler()
-	loggerHandler := handlers.NewLoggerHandler()
-	authHandler := handlers.NewAuthHandler(service.User)
-	recordHandler := handlers.NewRecordHandler(service.Record)
+	loggerHandler := handlers.NewLoggerHandler(v)
+	authHandler := handlers.NewAuthHandler(service.User, v)
+	recordHandler := handlers.NewRecordHandler(service.Record, v)
 	srv := server.NewServer(cfg, healthHandler, loggerHandler, authHandler, recordHandler)
 
 	return App{
 		server: srv,
-		pgRepo: pgRepo,
+		pgConn: pgConn,
 	}, nil
 }
 
@@ -75,17 +79,19 @@ func NewApp(cfg config.Config) (App, error) {
 func (app *App) Run(ctx context.Context) error {
 	group, ctx := errgroup.WithContext(ctx)
 
+	// HTTP server
 	group.Go(func() error {
 		if err := app.server.Start(ctx); err != nil && err != http.ErrServerClosed {
-			logger.Log.Error("server exited with error", zap.Error(err))
+			logger.Log.Error("http server exited with error", zap.Error(err))
 			return err
 		}
 		return nil
 	})
 
+	// gRPC server
 	group.Go(func() error {
 		if err := app.server.StartGRPC(ctx); err != nil {
-			logger.Log.Error("server exited with error", zap.Error(err))
+			logger.Log.Error("grpc server exited with error", zap.Error(err))
 			return err
 		}
 		return nil
@@ -96,12 +102,13 @@ func (app *App) Run(ctx context.Context) error {
 		return err
 	}
 
+	if err := app.pgConn.Close(); err != nil {
+		logger.Log.Warn("failed to close database connection", zap.Error(err))
+	}
+
 	logger.Log.Info("shutting down...")
-	defer func() {
-		if err := app.pgRepo.Close(); err != nil {
-			logger.Log.Warn("failed to close database connection", zap.Error(err))
-		}
-	}()
+
 	logger.Log.Info("shutdown complete")
+
 	return nil
 }

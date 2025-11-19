@@ -5,21 +5,21 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func NewCmdDelete() *cobra.Command {
+func NewCmdDelete(svc *service.Service) *cobra.Command {
 	addCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete record",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			idRecord := viper.GetString("id")
 			url := viper.GetString("server") + "/api/records/" + idRecord
-			resp, err := app.CliService.Record.Delete(cmd.Context(), url)
+			resp, err := svc.Record.Delete(cmd.Context(), url)
 
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -25,17 +24,9 @@ var bucketRecords = []byte("records")
 var bucketUsers = []byte("users")
 
 // NewBoltDB открывает или создаёт файл BoltDB
-func NewBoltDB() (*BoltStore, error) {
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		return nil, err
-	}
+func NewBoltDB(cfgDir string) (*BoltStore, error) {
 
-	path := filepath.Join(configDir, "gophkeeper", "data.db")
-
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return nil, err
-	}
+	path := filepath.Join(cfgDir, "data.db")
 
 	db, err := bolt.Open(path, 0600, &bolt.Options{
 		Timeout: 1 * time.Second,

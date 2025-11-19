@@ -7,11 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
-	"github.com/fatkulllin/gophkeeper/internal/client/filemanager"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
@@ -19,7 +16,7 @@ import (
 )
 
 // loginCmd represents the serve command
-func NewCmdLogin() *cobra.Command {
+func NewCmdLogin(svc *service.Service) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "login",
@@ -34,7 +31,7 @@ After successful authentication, your access token is stored locally
 and used for future requests.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			err := app.CliService.User.ClearDB()
+			err := svc.User.ClearDB()
 			if err != nil {
 				return err
 			}
@@ -50,7 +47,7 @@ and used for future requests.`,
 				return fmt.Errorf("username and password are required")
 			}
 
-			resp, err := app.CliService.User.LoginUser(ctx, username, password, url)
+			resp, err := svc.User.LoginUser(ctx, username, password, url)
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())
 			}
@@ -74,13 +71,10 @@ and used for future requests.`,
 				}
 			}
 
-			permission, err := strconv.ParseUint("0600", 8, 32)
-
+			err = svc.User.SaveToken("token", auth_token)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed save token: %v", err)
 			}
-
-			filemanager.NewFileManager().SaveFile("token", auth_token, os.FileMode(permission))
 
 			var userKeyResponse model.UserKeyRespone
 			err = json.Unmarshal(resp.Body, &userKeyResponse)
@@ -88,13 +82,13 @@ and used for future requests.`,
 				fmt.Println(string(resp.Body))
 				return fmt.Errorf("internal error: %v", err.Error())
 			}
-			err = app.CliService.User.SaveUserKey(userKeyResponse.UserKey)
+			err = svc.User.SaveUserKey(userKeyResponse.UserKey)
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())
 			}
 
 			urlRecords := viper.GetString("server") + "/api/records"
-			recordsResponse, err := app.CliService.Record.Get(cmd.Context(), urlRecords)
+			recordsResponse, err := svc.Record.Get(cmd.Context(), urlRecords)
 
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())
@@ -110,7 +104,7 @@ and used for future requests.`,
 			if err := json.Unmarshal(recordsResponse.Body, &records); err != nil {
 				return fmt.Errorf("failed to parse JSON: %w", err)
 			}
-			if err := app.CliService.Record.SaveRecords(records); err != nil {
+			if err := svc.Record.SaveRecords(records); err != nil {
 				return fmt.Errorf("failed to save records to bolt: %w", err)
 			}
 

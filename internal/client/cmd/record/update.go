@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fatkulllin/gophkeeper/internal/client/app"
+	"github.com/fatkulllin/gophkeeper/internal/client/service"
 	"github.com/fatkulllin/gophkeeper/model"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func NewCmdUpdate() *cobra.Command {
+func NewCmdUpdate(svc *service.Service) *cobra.Command {
 	addCmd := &cobra.Command{
 		Use:   "update",
 		Short: "update record",
@@ -31,7 +31,7 @@ func NewCmdUpdate() *cobra.Command {
 			}
 
 			url := viper.GetString("server") + "/api/records/" + viper.GetString("id")
-			resp, err := app.CliService.Record.Update(cmd.Context(), url, record)
+			resp, err := svc.Record.Update(cmd.Context(), url, record)
 
 			if err != nil {
 				return fmt.Errorf("internal error: %v", err.Error())

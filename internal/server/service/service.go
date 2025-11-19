@@ -12,12 +12,6 @@ type Service struct {
 	Record *RecordService
 }
 
-// Repositories объединяет интерфейсы хранилищ пользователей и записей.
-type Repositories interface {
-	UserRepositories
-	RecordRepository
-}
-
 // UserRepositories определяет методы для работы с пользователями в хранилище.
 type UserRepositories interface {
 	ExistUser(ctx context.Context, user model.UserCredentials) (bool, error)
@@ -27,10 +21,9 @@ type UserRepositories interface {
 }
 
 // RecordRepository определяет методы работы с записями пользователя.
-type RecordRepository interface {
+type RecordRepositories interface {
 	CreateRecord(ctx context.Context, record model.Record) error
 	DeleteRecord(ctx context.Context, userID int, idRecord string) error
-	GetEncryptedKeyUser(ctx context.Context, userID int) (string, error)
 	GetAllRecords(ctx context.Context, userID int) ([]model.Record, error)
 	GetRecord(ctx context.Context, userID int, idRecord string) (model.Record, error)
 	UpdateRecord(ctx context.Context, userID int, idRecord string, record model.Record) error
@@ -58,9 +51,9 @@ type CryptoUtil interface {
 
 // NewService создаёт контейнер сервисов и связывает бизнес-логику
 // с реализациями репозиториев, менеджером токенов, хешированием паролей и криптографией.
-func NewService(repo Repositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *Service {
+func NewService(userRepo UserRepositories, recordRepo RecordRepositories, tokenManager TokenManager, password Password, cryptoUtil CryptoUtil) *Service {
 	return &Service{
-		User:   NewUserService(repo, tokenManager, password, cryptoUtil),
-		Record: NewRecordService(repo, cryptoUtil),
+		User:   NewUserService(userRepo, tokenManager, password, cryptoUtil),
+		Record: NewRecordService(recordRepo, userRepo, cryptoUtil),
 	}
 }

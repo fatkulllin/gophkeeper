@@ -17,14 +17,16 @@ import (
 // и удаления записей пользователя. Он выполняет шифрование и расшифровку
 // данных с использованием пользовательского ключа.
 type RecordService struct {
-	repo       RecordRepository
+	recordRepo RecordRepositories
+	userRepo   UserRepositories
 	cryptoUtil CryptoUtil
 }
 
 // NewRecordService создаёт новый сервис для работы с записями.
-func NewRecordService(repo RecordRepository, cryptoUtil CryptoUtil) *RecordService {
+func NewRecordService(recordRepo RecordRepositories, userRepo UserRepositories, cryptoUtil CryptoUtil) *RecordService {
 	return &RecordService{
-		repo:       repo,
+		recordRepo: recordRepo,
+		userRepo:   userRepo,
 		cryptoUtil: cryptoUtil,
 	}
 }
@@ -36,7 +38,7 @@ func (s *RecordService) Create(ctx context.Context, userID int, input model.Reco
 		Metadata: input.Metadata,
 	}
 
-	encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
+	encryptedKey, err := s.userRepo.GetEncryptedKeyUser(ctx, userID)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return err
@@ -57,7 +59,7 @@ func (s *RecordService) Create(ctx context.Context, userID int, input model.Reco
 	record.Data = []byte(encryptData)
 
 	logger.Log.Debug("encrypted data", zap.String("data", encryptData))
-	err = s.repo.CreateRecord(ctx, record)
+	err = s.recordRepo.CreateRecord(ctx, record)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return fmt.Errorf("failed to create record: %w", err)
@@ -68,7 +70,7 @@ func (s *RecordService) Create(ctx context.Context, userID int, input model.Reco
 
 func (s *RecordService) GetAll(ctx context.Context, userID int) ([]model.Record, error) {
 
-	records, err := s.repo.GetAllRecords(ctx, userID)
+	records, err := s.recordRepo.GetAllRecords(ctx, userID)
 	if err != nil {
 		logger.Log.Error("error", zap.Error(err))
 		return nil, fmt.Errorf("get records: %w", err)
@@ -78,14 +80,14 @@ func (s *RecordService) GetAll(ctx context.Context, userID int) ([]model.Record,
 }
 
 func (s *RecordService) Get(ctx context.Context, userID int, idRecord string) (model.RecordResponse, error) {
-	record, err := s.repo.GetRecord(ctx, userID, idRecord)
+	record, err := s.recordRepo.GetRecord(ctx, userID, idRecord)
 
 	if err != nil {
 		logger.Log.Error("get record error", zap.Error(err))
 		return model.RecordResponse{}, fmt.Errorf("get record: %w", err)
 	}
 
-	encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
+	encryptedKey, err := s.userRepo.GetEncryptedKeyUser(ctx, userID)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return model.RecordResponse{}, err
@@ -112,7 +114,7 @@ func (s *RecordService) Get(ctx context.Context, userID int, idRecord string) (m
 }
 
 func (s *RecordService) Delete(ctx context.Context, userID int, idRecord string) error {
-	if err := s.repo.DeleteRecord(ctx, userID, idRecord); err != nil {
+	if err := s.recordRepo.DeleteRecord(ctx, userID, idRecord); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			logger.Log.Debug("no rows for delete", zap.String("record id", idRecord), zap.Int("user id", userID))
 			return sql.ErrNoRows
@@ -130,7 +132,7 @@ func (s *RecordService) Update(ctx context.Context, userID int, idRecord string,
 	}
 
 	if input.Data != nil {
-		encryptedKey, err := s.repo.GetEncryptedKeyUser(ctx, userID)
+		encryptedKey, err := s.userRepo.GetEncryptedKeyUser(ctx, userID)
 		if err != nil {
 			logger.Log.Error("", zap.Error(err))
 			return err
@@ -152,7 +154,7 @@ func (s *RecordService) Update(ctx context.Context, userID int, idRecord string,
 	if input.Metadata != nil {
 		record.Metadata = *input.Metadata
 	}
-	err := s.repo.UpdateRecord(ctx, userID, idRecord, record)
+	err := s.recordRepo.UpdateRecord(ctx, userID, idRecord, record)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return err

@@ -22,4 +22,4 @@ up-docker:
 	docker compose -f ./tools/docker-compose.yaml up  -d
 
 master-key:
-	@head -c 24 /dev/urandom | base64 | tr -d '\n' | cut -c1-32
+	@openssl rand -base64 32

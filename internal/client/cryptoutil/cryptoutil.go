@@ -49,8 +49,8 @@ func (c *CryptoUtil) EncryptString(src, key []byte) (string, error) {
 }
 
 func (c *CryptoUtil) Decrypt(encodedCipher string, key []byte) ([]byte, error) {
-	fmt.Println(encodedCipher, "aaaaa")
 	cipherData, err := base64.StdEncoding.DecodeString(encodedCipher)
+
 	if err != nil {
 		return nil, fmt.Errorf("decode base64: %w", err)
 	}

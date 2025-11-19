@@ -27,7 +27,7 @@ const (
 	DefaultDatabaseURI = "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable"
 	DefaultJWTSecret   = "TOKEN"
 	DefaultJWTExpires  = 24
-	DefaultMasterKey   = "M2WXo9hmd9pHMoaY8UHQokJhGXetCNBP"
+	DefaultMasterKey   = "DV4MIaUe9zYYO8ENbmdxBbTLo2fK+miK+GqXs4jKqnM="
 )
 
 func validateAddress(s string) error {
