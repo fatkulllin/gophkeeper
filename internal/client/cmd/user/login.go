@@ -30,7 +30,6 @@ Examples:
 After successful authentication, your access token is stored locally
 and used for future requests.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			err := svc.User.ClearDB()
 			if err != nil {
 				return err
@@ -79,7 +78,6 @@ and used for future requests.`,
 			var userKeyResponse model.UserKeyRespone
 			err = json.Unmarshal(resp.Body, &userKeyResponse)
 			if err != nil {
-				fmt.Println(string(resp.Body))
 				return fmt.Errorf("internal error: %v", err.Error())
 			}
 			err = svc.User.SaveUserKey(userKeyResponse.UserKey)

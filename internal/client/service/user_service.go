@@ -85,7 +85,6 @@ func (s *UserService) RegisterUser(ctx context.Context, username, password, url 
 }
 
 func (s *UserService) SaveUserKey(userKey string) error {
-	fmt.Println(userKey)
 	err := s.boltDB.PutUserKey(userKey)
 	if err != nil {
 		return err

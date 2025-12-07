@@ -16,6 +16,7 @@ import (
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func NewRootCmd() *cobra.Command {
@@ -33,18 +34,19 @@ func NewRootCmd() *cobra.Command {
 			if err = initializeLogger(); err != nil {
 				return err
 			}
-
-			svc, err = app.InitApp()
-			if err != nil {
-				return err
-			}
 			return nil
 		},
 	}
+
+	svc, err := app.InitApp()
+	if err != nil {
+		logger.Log.Error("", zap.Error(err))
+	}
+	rootCtx := rootCmd.Context()
 	rootCmd.PersistentFlags().String("log-level", "info", "logging level (debug, info, warn, error)")
 	rootCmd.PersistentFlags().Bool("develop-log", false, "enable development logging")
 	rootCmd.PersistentFlags().StringP("server", "s", "http://localhost:8080", "server address")
-	rootCmd.AddCommand(usermanager.NewCmdUser(svc))
+	rootCmd.AddCommand(usermanager.NewCmdUser(svc, rootCtx))
 	rootCmd.AddCommand(record.NewCmdRecord(svc))
 	rootCmd.AddCommand(NewCmdLogout(svc))
 	return rootCmd

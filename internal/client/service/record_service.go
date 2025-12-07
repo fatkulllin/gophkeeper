@@ -9,6 +9,7 @@ import (
 
 	"github.com/fatkulllin/gophkeeper/internal/client/models"
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/cryptoutil"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -17,15 +18,13 @@ type RecordService struct {
 	apiClient   ApiClient
 	fileManager FileManager
 	boltDB      Repository
-	cryptoUtil  CryptoUtil
 }
 
-func NewRecordService(apiClient ApiClient, fileManager FileManager, boltDB Repository, cryptoUtil CryptoUtil) *RecordService {
+func NewRecordService(apiClient ApiClient, fileManager FileManager, boltDB Repository) *RecordService {
 	return &RecordService{
 		apiClient:   apiClient,
 		fileManager: fileManager,
 		boltDB:      boltDB,
-		cryptoUtil:  cryptoUtil,
 	}
 }
 
@@ -101,8 +100,7 @@ func (s *RecordService) GetLocal(ctx context.Context, id int64) (model.RecordRes
 		logger.Log.Error("", zap.Error(err))
 		return model.RecordResponse{}, err
 	}
-
-	decryptData, err := s.cryptoUtil.Decrypt(string(record.Data), userKey)
+	decryptData, err := cryptoutil.Decrypt(record.Data, userKey)
 
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
@@ -193,7 +191,7 @@ func (s *RecordService) GetAll() ([]model.RecordResponse, error) {
 	records, err := s.boltDB.All()
 
 	if err != nil {
-		logger.Log.Error("", zap.Error(err))
+		logger.Log.Error("failed to get all record", zap.Error(err))
 		return nil, err
 	}
 
@@ -205,7 +203,7 @@ func (s *RecordService) GetAll() ([]model.RecordResponse, error) {
 	}
 
 	for _, rec := range records {
-		decryptData, err := s.cryptoUtil.Decrypt(string(rec.Data), userKey)
+		decryptData, err := cryptoutil.Decrypt(rec.Data, userKey)
 		if err != nil {
 			logger.Log.Error("", zap.Error(err))
 			return nil, err

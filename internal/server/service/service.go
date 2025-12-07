@@ -43,10 +43,7 @@ type Password interface {
 // CryptoUtil предоставляет операции шифрования и расшифровки данных.
 type CryptoUtil interface {
 	EncryptWithMasterKey(src []byte) (string, error)
-	GenerateRandom(size int) ([]byte, error)
 	DecryptWithMasterKey(src string) ([]byte, error)
-	EncryptString(src, key []byte) (string, error)
-	Decrypt(encodedCipher string, key []byte) ([]byte, error)
 }
 
 // NewService создаёт контейнер сервисов и связывает бизнес-логику

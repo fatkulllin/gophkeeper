@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/cryptoutil"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -50,15 +51,15 @@ func (s *RecordService) Create(ctx context.Context, userID int, input model.Reco
 		return err
 	}
 
-	encryptData, err := s.cryptoUtil.EncryptString(input.Data, decryptUserKey)
+	encryptData, err := cryptoutil.Encrypt(input.Data, decryptUserKey)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return err
 	}
 
-	record.Data = []byte(encryptData)
+	record.Data = encryptData
 
-	logger.Log.Debug("encrypted data", zap.String("data", encryptData))
+	logger.Log.Debug("encrypted data", zap.ByteString("data", encryptData))
 	err = s.recordRepo.CreateRecord(ctx, record)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
@@ -98,8 +99,7 @@ func (s *RecordService) Get(ctx context.Context, userID int, idRecord string) (m
 		logger.Log.Error("", zap.Error(err))
 		return model.RecordResponse{}, err
 	}
-
-	decryptData, err := s.cryptoUtil.Decrypt(string(record.Data), decryptUserKey)
+	decryptData, err := cryptoutil.Decrypt(record.Data, decryptUserKey)
 	if err != nil {
 		logger.Log.Error("", zap.Error(err))
 		return model.RecordResponse{}, err
@@ -144,7 +144,7 @@ func (s *RecordService) Update(ctx context.Context, userID int, idRecord string,
 			return err
 		}
 
-		encryptData, err := s.cryptoUtil.EncryptString(*input.Data, decryptUserKey)
+		encryptData, err := cryptoutil.Encrypt(*input.Data, decryptUserKey)
 		if err != nil {
 			logger.Log.Error("", zap.Error(err))
 			return err

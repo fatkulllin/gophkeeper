@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/fatkulllin/gophkeeper/model"
+	"github.com/fatkulllin/gophkeeper/pkg/cryptoutil"
 	"github.com/fatkulllin/gophkeeper/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -47,7 +48,7 @@ func (s *UserService) UserRegister(ctx context.Context, user model.UserCredentia
 	}
 	user.Password = hashPassword
 
-	random, err := s.cryptoUtil.GenerateRandom(32)
+	random, err := cryptoutil.GenerateRandom(32)
 
 	if err != nil {
 		return "", 0, err

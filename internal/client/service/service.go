@@ -32,13 +32,9 @@ type Repository interface {
 	Get(id int64) (model.Record, error)
 }
 
-type CryptoUtil interface {
-	Decrypt(encodedCipher string, key []byte) ([]byte, error)
-}
-
-func NewService(apiClient ApiClient, fileManager FileManager, boltDB Repository, cryptoUtil CryptoUtil) *Service {
+func NewService(apiClient ApiClient, fileManager FileManager, boltDB Repository) *Service {
 	return &Service{
 		User:   NewUserService(apiClient, fileManager, boltDB),
-		Record: NewRecordService(apiClient, fileManager, boltDB, cryptoUtil),
+		Record: NewRecordService(apiClient, fileManager, boltDB),
 	}
 }

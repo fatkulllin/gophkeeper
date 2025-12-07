@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/fatkulllin/gophkeeper/internal/client/apiclient"
-	"github.com/fatkulllin/gophkeeper/internal/client/cryptoutil"
 	"github.com/fatkulllin/gophkeeper/internal/client/filemanager"
 	"github.com/fatkulllin/gophkeeper/internal/client/fs"
 	"github.com/fatkulllin/gophkeeper/internal/client/service"
@@ -28,13 +27,12 @@ func InitApp() (*service.Service, error) {
 
 	apiClient := apiclient.NewApiClient(10)
 	fm := filemanager.NewFileManager(appDir)
-	cryptoUtil := cryptoutil.NewCryptoUtil()
 	boltDB, err := store.NewBoltDB(appDir)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize local storage: %v", err)
 	}
 
-	svc := service.NewService(apiClient, fm, boltDB, cryptoUtil)
+	svc := service.NewService(apiClient, fm, boltDB)
 	return svc, nil
 }
